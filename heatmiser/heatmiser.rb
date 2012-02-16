@@ -1,6 +1,7 @@
 require 'heatmiser_crc'
 require 'thread'
 require 'timeout'
+require 'socket'
 
 class Heatmiser
 
@@ -16,7 +17,7 @@ class Heatmiser
     Thread.new do
       queryCommand = addCRCToCommand [0x93, 0x0B, 0x00, @pin & 0xFF, @pin >> 8, 0x00, 0x00, 0xFF, 0xFF]
       loop do
-        if (Time.now - @timestamp) >= 4
+        if (Time.now - @timestamp) >= 2
           command = queryCommand
           @queueMutex.synchronize do
             command = @commandQueue.shift if @commandQueue.size > 0
