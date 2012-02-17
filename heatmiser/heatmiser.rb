@@ -10,7 +10,7 @@ class Heatmiser
         :hostname => hostname,
         :pin => pin,
         :lastStatus => {
-            :raw => nil,
+            :raw => [],
             :timestamp => Time.now,
             :sensedTemperature => 0.0,
             :requestedTemperature => 0
