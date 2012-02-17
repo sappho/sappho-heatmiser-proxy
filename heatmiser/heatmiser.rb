@@ -32,7 +32,6 @@ class Heatmiser
         crc = HeatmiserCRC.new queryCommand
         queryCommand << crc.crcLo
         queryCommand << crc.crcHi
-        sleep 4
         loop do
           sleep 1
           command = queryCommand
