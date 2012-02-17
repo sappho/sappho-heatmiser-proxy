@@ -13,6 +13,7 @@ class Heatmiser
             :valid => false,
             :raw => [],
             :timestamp => Time.now,
+            :timeSinceLastValid => 0,
             :sensedTemperature => 0.0,
             :requestedTemperature => 0
         },
@@ -59,10 +60,12 @@ class Heatmiser
                 status << crcLo
                 status << crcHi
                 statusMutex.synchronize do
+                  timeSinceLastValid = timestamp - data[:lastStatus][:timestamp]
                   data[:lastStatus] = {
                       :valid => true,
                       :raw => status,
                       :timestamp => timestamp,
+                      :timeSinceLastValid => timeSinceLastValid,
                       :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
                       :requestedTemperature => status[25] & 0xFF
                   }
@@ -97,5 +100,5 @@ hm.monitor
 loop do
   sleep 1
   status = hm.lastStatus
-  puts "#{status[:timestamp]} #{status[:requestedTemperature]} #{status[:sensedTemperature]}" if status[:valid]
+  puts "#{status[:timestamp]} #{status[:timeSinceLastValid]} #{status[:requestedTemperature]} #{status[:sensedTemperature]}" if status[:valid]
 end
