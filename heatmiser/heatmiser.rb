@@ -44,7 +44,7 @@ class Heatmiser
             crcHi = status.pop
             crcLo = status.pop
             crc = HeatmiserCRC.new status
-            if status[1] == 81 and status[2] == 0 and crc.crcHi == crcHi and crc.crcLo == crcLo
+            if status[0] == 0x94 and status[1] == 81 and status[2] == 0 and crc.crcHi == crcHi and crc.crcLo == crcLo
               status << crcLo
               status << crcHi
               statusMutex.synchronize do
