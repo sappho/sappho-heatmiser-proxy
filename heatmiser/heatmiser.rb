@@ -34,7 +34,6 @@ class Heatmiser
         queryCommand << crc.crcLo
         queryCommand << crc.crcHi
         loop do
-          sleep 0.5
           command = queryCommand
           queueMutex.synchronize do
             command = commandQueue.shift if commandQueue.size > 0
@@ -88,7 +87,7 @@ end
 hm = Heatmiser.new(ARGV[0], Integer(ARGV[1]))
 hm.monitor
 loop do
-  sleep 0.1
+  sleep 1
   status = hm.lastStatus
   puts "#{status[:timestamp]} #{status[:requestedTemperature]} #{status[:sensedTemperature]}" if status[:valid]
 end
