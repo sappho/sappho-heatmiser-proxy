@@ -9,10 +9,12 @@ class Heatmiser
     @data = {
         :hostname => hostname,
         :pin => pin,
-        :lastStatus => nil,
-        :timestamp => Time.now,
-        :sensedTemperature => 0.0,
-        :requestedTemperature => 0,
+        :lastStatus => {
+            :raw => nil,
+            :timestamp => Time.now,
+            :sensedTemperature => 0.0,
+            :requestedTemperature => 0
+        },
         :commandQueue => [],
         :queueMutex => Mutex.new,
         :statusMutex => Mutex.new
@@ -46,14 +48,17 @@ class Heatmiser
             crcHi = status.pop
             crcLo = status.pop
             crc = HeatmiserCRC.new status
-            if status[1] == 0x51 and status[2] == 0 and crc.crcHi == crcHi and crc.crcLo == crcLo
+            if (status[0] & 0xFF) == 0x94 and status[1] == 0x51 and status[2] == 0 and
+                crc.crcHi == crcHi and crc.crcLo == crcLo
               status << crcLo
               status << crcHi
               statusMutex.synchronize do
-                data[:lastStatus] = status
-                data[:timestamp] = timestamp
-                data[:sensedTemperature] = ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0
-                data[:requestedTemperature] = status[25] & 0xFF
+                data[:lastStatus] = {
+                    :raw => status,
+                    :timestamp => timestamp,
+                    :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
+                    :requestedTemperature => status[25] & 0xFF
+                }
               end
             end
           rescue
@@ -63,15 +68,15 @@ class Heatmiser
     end.run
   end
 
-  def sensedTemperature
+  def lastStatus
     @data[:statusMutex].synchronize do
-      @data[:sensedTemperature]
-    end
-  end
-
-  def requestedTemperature
-    @data[:statusMutex].synchronize do
-      @data[:requestedTemperature]
+      status = @data[:lastStatus]
+      {
+          :raw => status[:raw].dup,
+          :timestamp => status[:timestamp],
+          :sensedTemperature => status[:sensedTemperature],
+          :requestedTemperature => status[:requestedTemperature]
+      }
     end
   end
 
@@ -81,5 +86,6 @@ hm = Heatmiser.new(ARGV[0], Integer(ARGV[1]))
 hm.monitor
 loop do
   sleep 1
-  puts "#{hm.requestedTemperature} #{hm.sensedTemperature}"
+  status = hm.lastStatus
+  puts "#{status[:requestedTemperature]} #{status[:sensedTemperature]}"
 end
