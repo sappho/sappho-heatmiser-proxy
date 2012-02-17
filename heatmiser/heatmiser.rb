@@ -17,6 +17,7 @@ class Heatmiser
             :timeSinceLastValid => 0,
             :sensedTemperature => 0.0,
             :requestedTemperature => 0,
+            :heatOn => false,
             :deviceTime => Time.now,
             :dayOfWeek => 0
         },
@@ -71,6 +72,7 @@ class Heatmiser
                       :timeSinceLastValid => timeSinceLastValid,
                       :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
                       :requestedTemperature => status[25] & 0xFF,
+                      :heatOn => status[47] == 1,
                       :deviceTime => Time.utc(2000 + (status[48] & 0xFF), status[49], status[50], status[52], status[53], status[54]),
                       :dayOfWeek => dayOfWeek
                   }
@@ -96,6 +98,7 @@ class Heatmiser
           :timeSinceLastValid => status[:timeSinceLastValid],
           :sensedTemperature => status[:sensedTemperature],
           :requestedTemperature => status[:requestedTemperature],
+          :heatOn => status[:heatOn],
           :deviceTime => status[:deviceTime],
           :dayOfWeek => status[:dayOfWeek]
       }
@@ -109,5 +112,5 @@ hm.monitor
 loop do
   sleep 1
   status = hm.lastStatus
-  puts "#{status[:timestamp]} #{status[:deviceTime]} #{status[:dayOfWeek]} #{status[:timeSinceLastValid]} #{status[:requestedTemperature]} #{status[:sensedTemperature]}" if status[:valid]
+  puts "#{(status[:raw].collect {|byte| "%02x " % (byte & 0xFF)}).join}#{status[:requestedTemperature]} #{status[:sensedTemperature]} #{status[:heatOn]}" if status[:valid]
 end
