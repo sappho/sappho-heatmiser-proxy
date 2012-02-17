@@ -73,9 +73,9 @@ class Heatmiser
       status = @data[:lastStatus]
       {
           :raw => status[:raw].dup,
-          :timestamp => status[:timestamp].dup,
-          :sensedTemperature => status[:sensedTemperature].dup,
-          :requestedTemperature => status[:requestedTemperature].dup
+          :timestamp => status[:timestamp],
+          :sensedTemperature => status[:sensedTemperature],
+          :requestedTemperature => status[:requestedTemperature]
       }
     end
   end
