@@ -39,7 +39,6 @@ class Heatmiser
           queryCommand << crc.crcHi
           count = 0
           loop do
-            sleep 1
             count += 1
             break if count > 15
             command = queryCommand
@@ -55,8 +54,8 @@ class Heatmiser
                 status = socket.read(81).unpack('c*')
               end
               timestamp = Time.now
-              crcHi = status.pop
-              crcLo = status.pop
+              crcHi = status.pop & 0xFF
+              crcLo = status.pop & 0xFF
               crc = HeatmiserCRC.new status
               if (status[0] & 0xFF) == 0x94 and status[1] == 0x51 and status[2] == 0 and
                   crc.crcHi == crcHi and crc.crcLo == crcLo
