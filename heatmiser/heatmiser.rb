@@ -39,6 +39,7 @@ class Heatmiser
           queryCommand << crc.crcHi
           count = 0
           loop do
+            sleep 1
             count += 1
             break if count > 10
             command = queryCommand
@@ -112,5 +113,5 @@ hm.monitor
 loop do
   sleep 1
   status = hm.lastStatus
-  puts "#{(status[:raw].collect {|byte| "%02x " % (byte & 0xFF)}).join}#{status[:requestedTemperature]} #{status[:sensedTemperature]} #{status[:heatOn]}" if status[:valid]
+  puts "#{(status[:raw].collect {|byte| "%02x " % (byte & 0xFF)}).join}#{status[:requestedTemperature]} #{status[:sensedTemperature]} #{status[:heatOn]} #{status[:timeSinceLastValid]}" if status[:valid]
 end
