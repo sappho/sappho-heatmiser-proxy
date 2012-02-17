@@ -59,7 +59,7 @@ class Heatmiser
   def sensedTemperature
     @data[:statusMutex].synchronize do
       status = @data[:lastStatus]
-      status && ((status[44] & 0xFF) | ((status[45] << 8) & 0xFF00)) / 10.0
+      status && ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0
     end
   end
 
