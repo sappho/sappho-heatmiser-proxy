@@ -66,11 +66,18 @@ class Heatmiser
     end
   end
 
+  def requestedTemperature
+    @data[:statusMutex].synchronize do
+      status = @data[:lastStatus]
+      status && status[25] & 0xFF
+    end
+  end
+
 end
 
 hm = Heatmiser.new(ARGV[0], Integer(ARGV[1]))
 hm.monitor
 loop do
   sleep 1
-  puts hm.sensedTemperature
+  puts "#{hm.requestedTemperature} #{hm.sensedTemperature}"
 end
