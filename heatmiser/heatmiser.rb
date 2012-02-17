@@ -25,7 +25,7 @@ class Heatmiser
   def monitor
     @thread = Thread.new @data do | data |
       loop do
-        sleep 2
+        sleep 1
         TCPSocket.open data[:hostname], 8068 do | socket |
           queueMutex = data[:queueMutex]
           statusMutex = data[:statusMutex]
@@ -37,9 +37,9 @@ class Heatmiser
           queryCommand << crc.crcHi
           count = 0
           loop do
-            sleep 2
+            sleep 1
             count += 1
-            break if count > 8
+            break if count > 10
             command = queryCommand
             queueMutex.synchronize do
               command = commandQueue.shift if commandQueue.size > 0
