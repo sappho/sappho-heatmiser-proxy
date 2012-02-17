@@ -16,7 +16,8 @@ class Heatmiser
             :timestamp => Time.now,
             :timeSinceLastValid => 0,
             :sensedTemperature => 0.0,
-            :requestedTemperature => 0
+            :requestedTemperature => 0,
+            :deviceTime => Time.now
         },
         :commandQueue => [],
         :mutex => @mutex,
@@ -68,7 +69,8 @@ class Heatmiser
                       :timestamp => timestamp,
                       :timeSinceLastValid => timeSinceLastValid,
                       :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
-                      :requestedTemperature => status[25] & 0xFF
+                      :requestedTemperature => status[25] & 0xFF,
+                      :deviceTime => Time.utc(2000 + (status[48] & 0xFF), status[49], status[50], status[52], status[53], status[54])
                   }
                   commandQueue.shift if fromQueue
                 end
@@ -91,7 +93,8 @@ class Heatmiser
           :timestamp => status[:timestamp],
           :timeSinceLastValid => status[:timeSinceLastValid],
           :sensedTemperature => status[:sensedTemperature],
-          :requestedTemperature => status[:requestedTemperature]
+          :requestedTemperature => status[:requestedTemperature],
+          :deviceTime => status[:deviceTime]
       }
     end
   end
@@ -103,5 +106,5 @@ hm.monitor
 loop do
   sleep 1
   status = hm.lastStatus
-  puts "#{status[:timestamp]} #{status[:timeSinceLastValid]} #{status[:requestedTemperature]} #{status[:sensedTemperature]}" if status[:valid]
+  puts "#{status[:timestamp]} #{status[:deviceTime]} #{status[:timeSinceLastValid]} #{status[:requestedTemperature]} #{status[:sensedTemperature]}" if status[:valid]
 end
