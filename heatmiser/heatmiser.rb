@@ -11,6 +11,8 @@ class Heatmiser
         :pin => pin,
         :lastStatus => nil,
         :timestamp => Time.now,
+        :sensedTemperature => 0.0,
+        :requestedTemperature => 0,
         :commandQueue => [],
         :queueMutex => Mutex.new,
         :statusMutex => Mutex.new
@@ -44,12 +46,14 @@ class Heatmiser
             crcHi = status.pop
             crcLo = status.pop
             crc = HeatmiserCRC.new status
-            if status[0] == 0x94 and status[1] == 81 and status[2] == 0 and crc.crcHi == crcHi and crc.crcLo == crcLo
+            if status[0] == 0x94 and status[1] == 0x51 and status[2] == 0 and crc.crcHi == crcHi and crc.crcLo == crcLo
               status << crcLo
               status << crcHi
               statusMutex.synchronize do
                 data[:lastStatus] = status
                 data[:timestamp] = timestamp
+                data[:sensedTemperature] = ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0
+                data[:requestedTemperature] = status[25] & 0xFF
               end
             end
           rescue
@@ -61,15 +65,13 @@ class Heatmiser
 
   def sensedTemperature
     @data[:statusMutex].synchronize do
-      status = @data[:lastStatus]
-      status && ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0
+      data[:sensedTemperature]
     end
   end
 
   def requestedTemperature
     @data[:statusMutex].synchronize do
-      status = @data[:lastStatus]
-      status && status[25] & 0xFF
+      data[:requestedTemperature]
     end
   end
 
