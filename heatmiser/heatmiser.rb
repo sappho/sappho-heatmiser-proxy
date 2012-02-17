@@ -87,6 +87,7 @@ class Heatmiser
           :valid => status[:valid],
           :raw => status[:raw].dup,
           :timestamp => status[:timestamp],
+          :timeSinceLastValid => status[:timeSinceLastValid],
           :sensedTemperature => status[:sensedTemperature],
           :requestedTemperature => status[:requestedTemperature]
       }
