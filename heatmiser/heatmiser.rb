@@ -6,6 +6,7 @@ require 'socket'
 class Heatmiser
 
   def initialize hostname, pin
+    @mutex = Mutex.new
     @data = {
         :hostname => hostname,
         :pin => pin,
@@ -18,8 +19,7 @@ class Heatmiser
             :requestedTemperature => 0
         },
         :commandQueue => [],
-        :queueMutex => Mutex.new,
-        :statusMutex => Mutex.new
+        :mutex => @mutex,
     }
   end
 
@@ -28,8 +28,7 @@ class Heatmiser
       loop do
         sleep 1
         TCPSocket.open data[:hostname], 8068 do | socket |
-          queueMutex = data[:queueMutex]
-          statusMutex = data[:statusMutex]
+          mutex = data[:mutex]
           commandQueue = data[:commandQueue]
           pin = data[:pin]
           queryCommand = [0x93, 0x0B, 0x00, pin & 0xFF, pin >> 8, 0x00, 0x00, 0xFF, 0xFF]
@@ -42,8 +41,10 @@ class Heatmiser
             count += 1
             break if count > 10
             command = queryCommand
-            queueMutex.synchronize do
-              command = commandQueue.shift if commandQueue.size > 0
+            fromQueue = false
+            mutex.synchronize do
+              fromQueue = commandQueue.size > 0
+              command = commandQueue[0] if fromQueue
             end
             begin
               socket.write command.pack('c*')
@@ -59,7 +60,7 @@ class Heatmiser
                   crc.crcHi == crcHi and crc.crcLo == crcLo
                 status << crcLo
                 status << crcHi
-                statusMutex.synchronize do
+                mutex.synchronize do
                   timeSinceLastValid = timestamp - data[:lastStatus][:timestamp]
                   data[:lastStatus] = {
                       :valid => true,
@@ -69,6 +70,7 @@ class Heatmiser
                       :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
                       :requestedTemperature => status[25] & 0xFF
                   }
+                  commandQueue.shift if fromQueue
                 end
                 count = 0
               end
@@ -81,7 +83,7 @@ class Heatmiser
   end
 
   def lastStatus
-    @data[:statusMutex].synchronize do
+    @mutex.synchronize do
       status = @data[:lastStatus]
       {
           :valid => status[:valid],
