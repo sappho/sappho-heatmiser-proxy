@@ -24,7 +24,10 @@ class Heatmiser
         statusMutex = data[:statusMutex]
         commandQueue = data[:commandQueue]
         pin = data[:pin]
-        queryCommand = addCRCToCommand [0x93, 0x0B, 0x00, pin & 0xFF, pin >> 8, 0x00, 0x00, 0xFF, 0xFF]
+        queryCommand = [0x93, 0x0B, 0x00, pin & 0xFF, pin >> 8, 0x00, 0x00, 0xFF, 0xFF]
+        crc = HeatmiserCRC.new queryCommand
+        queryCommand << crc.crcLo
+        queryCommand << crc.crcHi
         loop do
           sleep 1
           command = queryCommand
@@ -41,7 +44,7 @@ class Heatmiser
             crcHi = status.pop
             crcLo = status.pop
             crc = HeatmiserCRC.new status
-            if crc.crcHi == crcHi and crc.crcLo == crcLo
+            if status[1] == 81 and status[2] == 0 and crc.crcHi == crcHi and crc.crcLo == crcLo
               status << crcLo
               status << crcHi
               statusMutex.synchronize do
@@ -61,17 +64,6 @@ class Heatmiser
       status = @data[:lastStatus]
       status && ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0
     end
-  end
-
-  def wait
-    @thread.join
-  end
-
-  def addCRCToCommand command
-    crc = HeatmiserCRC.new command
-    command << crc.crcLo
-    command << crc.crcHi
-    command
   end
 
 end
