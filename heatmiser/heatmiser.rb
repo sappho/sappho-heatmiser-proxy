@@ -28,7 +28,6 @@ class Heatmiser
   def monitor
     @thread = Thread.new @data do | data |
       loop do
-        sleep 1
         TCPSocket.open data[:hostname], 8068 do | socket |
           mutex = data[:mutex]
           commandQueue = data[:commandQueue]
