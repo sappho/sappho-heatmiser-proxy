@@ -34,6 +34,7 @@ class Heatmiser
         queryCommand << crc.crcLo
         queryCommand << crc.crcHi
         loop do
+          sleep 1
           command = queryCommand
           queueMutex.synchronize do
             command = commandQueue.shift if commandQueue.size > 0
