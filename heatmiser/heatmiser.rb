@@ -65,13 +65,13 @@ class Heatmiser
 
   def sensedTemperature
     @data[:statusMutex].synchronize do
-      data[:sensedTemperature]
+      @data[:sensedTemperature]
     end
   end
 
   def requestedTemperature
     @data[:statusMutex].synchronize do
-      data[:requestedTemperature]
+      @data[:requestedTemperature]
     end
   end
 
