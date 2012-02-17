@@ -17,7 +17,8 @@ class Heatmiser
             :timeSinceLastValid => 0,
             :sensedTemperature => 0.0,
             :requestedTemperature => 0,
-            :deviceTime => Time.now
+            :deviceTime => Time.now,
+            :dayOfWeek => 0
         },
         :commandQueue => [],
         :mutex => @mutex,
@@ -63,6 +64,8 @@ class Heatmiser
                 status << crcHi
                 mutex.synchronize do
                   timeSinceLastValid = timestamp - data[:lastStatus][:timestamp]
+                  dayOfWeek = status[51]
+                  dayOfWeek = 0 if dayOfWeek == 7
                   data[:lastStatus] = {
                       :valid => true,
                       :raw => status,
@@ -70,7 +73,8 @@ class Heatmiser
                       :timeSinceLastValid => timeSinceLastValid,
                       :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
                       :requestedTemperature => status[25] & 0xFF,
-                      :deviceTime => Time.utc(2000 + (status[48] & 0xFF), status[49], status[50], status[52], status[53], status[54])
+                      :deviceTime => Time.utc(2000 + (status[48] & 0xFF), status[49], status[50], status[52], status[53], status[54]),
+                      :dayOfWeek => dayOfWeek
                   }
                   commandQueue.shift if fromQueue
                 end
@@ -94,7 +98,8 @@ class Heatmiser
           :timeSinceLastValid => status[:timeSinceLastValid],
           :sensedTemperature => status[:sensedTemperature],
           :requestedTemperature => status[:requestedTemperature],
-          :deviceTime => status[:deviceTime]
+          :deviceTime => status[:deviceTime],
+          :dayOfWeek => status[:dayOfWeek]
       }
     end
   end
@@ -106,5 +111,5 @@ hm.monitor
 loop do
   sleep 1
   status = hm.lastStatus
-  puts "#{status[:timestamp]} #{status[:deviceTime]} #{status[:timeSinceLastValid]} #{status[:requestedTemperature]} #{status[:sensedTemperature]}" if status[:valid]
+  puts "#{status[:timestamp]} #{status[:deviceTime]} #{status[:dayOfWeek]} #{status[:timeSinceLastValid]} #{status[:requestedTemperature]} #{status[:sensedTemperature]}" if status[:valid]
 end
