@@ -39,7 +39,7 @@ class Heatmiser
           count = 0
           loop do
             count += 1
-            break if count > 15
+            break if count > 10
             command = queryCommand
             fromQueue = false
             mutex.synchronize do
