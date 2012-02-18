@@ -131,5 +131,5 @@ hm.monitor
 loop do
   sleep 1
   status = hm.lastStatus
-  puts "#{(status[:raw].collect {|byte| "%02x " % (byte & 0xFF)}).join}#{status[:requestedTemperature]} #{status[:sensedTemperature]} #{status[:heatOn]} #{status[:timestamp]} #{status[:deviceTimeOffset]}" if status[:valid]
+  puts "#{(status[:raw].collect {|byte| "%02x " % (byte & 0xFF)}).join}#{status[:requestedTemperature]} #{status[:sensedTemperature]} #{status[:heatOn]} #{status[:timestamp]} #{status[:dayOfWeek]} #{status[:deviceTimeOffset]}" if status[:valid]
 end
