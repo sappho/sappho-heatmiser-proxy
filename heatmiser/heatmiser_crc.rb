@@ -10,17 +10,18 @@ class HeatmiserCRC
   ]
   attr_reader :crcHi, :crcLo
 
-  def initialize bytes = []
+  def initialize bytes
+    @bytes = bytes
     @crcHi = 0xFF
     @crcLo = 0xFF
-    addBytes bytes
-  end
-
-  def addBytes bytes
     bytes.each do |byte|
       addNibble byte >> 4
       addNibble byte & 0x0F
     end
+  end
+
+  def appendCRC
+    @bytes << @crcLo << @crcHi
   end
 
   private
