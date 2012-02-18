@@ -18,7 +18,7 @@ class Heatmiser
             :sensedTemperature => 0.0,
             :requestedTemperature => 0,
             :heatOn => false,
-            :deviceTime => Time.now,
+            :deviceTimeOffset => 0.0,
             :dayOfWeek => 0
         },
         :commandQueue => [],
@@ -74,7 +74,7 @@ class Heatmiser
                       :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
                       :requestedTemperature => status[25] & 0xFF,
                       :heatOn => status[47] == 1,
-                      :deviceTime => Time.utc(2000 + (status[48] & 0xFF), status[49], status[50], status[52], status[53], status[54]),
+                      :deviceTimeOffset => Time.local(2000 + (status[48] & 0xFF), status[49], status[50], status[52], status[53], status[54]),
                       :dayOfWeek => dayOfWeek
                   }
                   commandQueue.shift if fromQueue
@@ -85,6 +85,7 @@ class Heatmiser
             end
           end
         end
+        sleep 5
       end
     end.run
   end
@@ -100,7 +101,7 @@ class Heatmiser
           :sensedTemperature => status[:sensedTemperature],
           :requestedTemperature => status[:requestedTemperature],
           :heatOn => status[:heatOn],
-          :deviceTime => status[:deviceTime],
+          :deviceTimeOffset => status[:deviceTimeOffset],
           :dayOfWeek => status[:dayOfWeek]
       }
     end
@@ -113,5 +114,5 @@ hm.monitor
 loop do
   sleep 1
   status = hm.lastStatus
-  puts "#{(status[:raw].collect {|byte| "%02x " % (byte & 0xFF)}).join}#{status[:requestedTemperature]} #{status[:sensedTemperature]} #{status[:heatOn]} #{status[:timestamp]}" if status[:valid]
+  puts "#{(status[:raw].collect {|byte| "%02x " % (byte & 0xFF)}).join}#{status[:requestedTemperature]} #{status[:sensedTemperature]} #{status[:heatOn]} #{status[:timestamp]} #{status[:deviceTimeOffset]}" if status[:valid]
 end
