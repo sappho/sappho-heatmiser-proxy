@@ -19,6 +19,7 @@ class Heatmiser
             :requestedTemperature => 0,
             :heatOn => false,
             :keyLockOn => false,
+            :frostProtectOn => false,
             :deviceTimeOffset => 0.0,
             :dayOfWeek => 0
         },
@@ -93,6 +94,7 @@ class Heatmiser
                       :requestedTemperature => status[25] & 0xFF,
                       :heatOn => status[47] == 1,
                       :keyLockOn => status[29] == 1,
+                      :frostProtectOn => status[30] == 1,
                       :deviceTimeOffset => deviceTimeOffset,
                       :dayOfWeek => dayOfWeek
                   }
@@ -122,6 +124,7 @@ class Heatmiser
           :requestedTemperature => status[:requestedTemperature],
           :heatOn => status[:heatOn],
           :keyLockOn => status[:keyLockOn],
+          :frostProtectOn => status[:frostProtectOn],
           :deviceTimeOffset => status[:deviceTimeOffset],
           :dayOfWeek => status[:dayOfWeek]
       }
@@ -135,5 +138,5 @@ hm.monitor
 loop do
   sleep 5
   status = hm.lastStatus
-  puts "#{(status[:raw].collect {|byte| "%02x " % (byte & 0xFF)}).join}#{status[:requestedTemperature]} #{status[:sensedTemperature]} #{status[:heatOn]} #{status[:keyLockOn]} #{status[:timestamp]} #{status[:dayOfWeek]} #{status[:deviceTimeOffset]}" if status[:valid]
+  puts "#{(status[:raw].collect {|byte| "%02x " % (byte & 0xFF)}).join}#{status[:requestedTemperature]} #{status[:sensedTemperature]} #{status[:heatOn]} #{status[:keyLockOn]} #{status[:frostProtectOn]} #{status[:timestamp]} #{status[:dayOfWeek]} #{status[:deviceTimeOffset]}" if status[:valid]
 end
