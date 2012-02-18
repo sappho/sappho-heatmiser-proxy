@@ -41,9 +41,9 @@ class Heatmiser
           queryCommand = HeatmiserCRC.new(
               [0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           deviceTimeOffset = 0.0
-          count = 0
-          while count < 10 do
-            count += 1
+          errorCount = 0
+          while errorCount < 10 do
+            errorCount += 1
             sleep 5
             command = queryCommand
             fromQueue = false
@@ -76,8 +76,7 @@ class Heatmiser
               crc = HeatmiserCRC.new status
               if (status[0] & 0xFF) == 0x94 and status[1] == 0x51 and status[2] == 0 and
                   crc.crcHi == crcHi and crc.crcLo == crcLo
-                status << crcLo
-                status << crcHi
+                status << crcLo << crcHi
                 mutex.synchronize do
                   timeSinceLastValid = timestamp - data[:lastStatus][:timestamp]
                   dayOfWeek = status[51]
@@ -97,7 +96,7 @@ class Heatmiser
                   }
                   commandQueue.shift if fromQueue
                 end
-                count = 0
+                errorCount = 0
               end
             rescue
             end
