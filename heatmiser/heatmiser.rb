@@ -106,8 +106,8 @@ class Heatmiser
             end
           end
           socket.close
+          sleep 5
         end
-        sleep 5
       end
     end.run
   end
