@@ -41,7 +41,6 @@ class Heatmiser
           queryCommand = HeatmiserCRC.new(
               [0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           deviceTimeOffset = 0.0
-          lastTimeSet = Time.now
           count = 0
           while count < 10 do
             count += 1
@@ -52,18 +51,18 @@ class Heatmiser
               fromQueue = commandQueue.size > 0
               command = commandQueue[0] if fromQueue
             end
-            if !fromQueue and deviceTimeOffset.abs > 30.0 and (Time.now - lastTimeSet) > 30.0
-              lastTimeSet = Time.now
-              dayOfWeek = lastTimeSet.wday
+            if !fromQueue and deviceTimeOffset.abs > 30.0
+              timeNow = Time.now
+              dayOfWeek = timeNow.wday
               dayOfWeek = 7 if dayOfWeek == 0
               command = HeatmiserCRC.new([0xA3, 0x12, 0x00, pinLo, pinHi, 0x01, 0x2B, 0x00, 0x07,
-                                         lastTimeSet.year - 2000,
-                                         lastTimeSet.month,
-                                         lastTimeSet.day,
+                                         timeNow.year - 2000,
+                                         timeNow.month,
+                                         timeNow.day,
                                          dayOfWeek,
-                                         lastTimeSet.hour,
-                                         lastTimeSet.min,
-                                         lastTimeSet.sec]).appendCRC
+                                         timeNow.hour,
+                                         timeNow.min,
+                                         timeNow.sec]).appendCRC
             end
             begin
               socket.write command.pack('c*')
