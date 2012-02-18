@@ -28,18 +28,20 @@ class Heatmiser
 
   def monitor
     @thread = Thread.new @data do | data |
+      mutex = data[:mutex]
+      commandQueue = data[:commandQueue]
+      pin = data[:pin]
+      pinLo = pin & 0xFF
+      pinHi = (pin >> 8) & 0xFF
       loop do
         TCPSocket.open data[:hostname], 8068 do | socket |
-          mutex = data[:mutex]
-          commandQueue = data[:commandQueue]
-          pin = data[:pin]
-          queryCommand = [0x93, 0x0B, 0x00, pin & 0xFF, pin >> 8, 0x00, 0x00, 0xFF, 0xFF]
-          crc = HeatmiserCRC.new queryCommand
-          queryCommand << crc.crcLo
-          queryCommand << crc.crcHi
+          queryCommand = HeatmiserCRC.new(
+              [0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
+          deviceTimeOffset = 0.0
+          lastTimeSet = Time.now
           count = 0
           loop do
-            sleep 1
+            sleep 5
             count += 1
             break if count > 10
             command = queryCommand
@@ -47,6 +49,19 @@ class Heatmiser
             mutex.synchronize do
               fromQueue = commandQueue.size > 0
               command = commandQueue[0] if fromQueue
+            end
+            if !fromQueue and deviceTimeOffset.abs > 30.0 and (Time.now - lastTimeSet) > 30.0
+              lastTimeSet = Time.now
+              dayOfWeek = lastTimeSet.wday
+              dayOfWeek = 7 if dayOfWeek == 0
+              command = HeatmiserCRC.new([0xA3, 0x12, 0x00, pinLo, pinHi, 0x01, 0x2B, 0x00, 0x07,
+                                         lastTimeSet.year - 2000,
+                                         lastTimeSet.month,
+                                         lastTimeSet.day,
+                                         dayOfWeek,
+                                         lastTimeSet.hour,
+                                         lastTimeSet.min,
+                                         lastTimeSet.sec]).appendCRC
             end
             begin
               socket.write command.pack('c*')
@@ -66,6 +81,8 @@ class Heatmiser
                   timeSinceLastValid = timestamp - data[:lastStatus][:timestamp]
                   dayOfWeek = status[51]
                   dayOfWeek = 0 if dayOfWeek == 7
+                  deviceTimeOffset = Time.local(2000 + (status[48] & 0xFF), status[49], status[50],
+                                                status[52], status[53], status[54]) - timestamp
                   data[:lastStatus] = {
                       :valid => true,
                       :raw => status,
@@ -74,7 +91,7 @@ class Heatmiser
                       :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
                       :requestedTemperature => status[25] & 0xFF,
                       :heatOn => status[47] == 1,
-                      :deviceTimeOffset => Time.local(2000 + (status[48] & 0xFF), status[49], status[50], status[52], status[53], status[54]) - timestamp,
+                      :deviceTimeOffset => deviceTimeOffset,
                       :dayOfWeek => dayOfWeek
                   }
                   commandQueue.shift if fromQueue
