@@ -101,6 +101,7 @@ class Heatmiser
             rescue
             end
           end
+          socket.close
         end
         sleep 5
       end
