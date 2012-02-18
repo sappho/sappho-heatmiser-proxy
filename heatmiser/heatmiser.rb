@@ -53,7 +53,7 @@ class Heatmiser
               fromQueue = commandQueue.size > 0
               command = commandQueue[0] if fromQueue
             end
-            if !fromQueue and deviceTimeOffset.abs > 30.0
+            if !fromQueue and deviceTimeOffset.abs > 5.0
               timeNow = Time.now
               dayOfWeek = timeNow.wday
               dayOfWeek = 7 if dayOfWeek == 0
