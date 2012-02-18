@@ -69,7 +69,7 @@ class Heatmiser
             begin
               socket.write command.pack('c*')
               status = nil
-              timeout 1 do
+              timeout 5 do
                 status = socket.read(81).unpack('c*')
               end
               timestamp = Time.now
