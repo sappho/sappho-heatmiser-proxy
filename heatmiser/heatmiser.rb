@@ -74,7 +74,7 @@ class Heatmiser
                       :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
                       :requestedTemperature => status[25] & 0xFF,
                       :heatOn => status[47] == 1,
-                      :deviceTimeOffset => Time.local(2000 + (status[48] & 0xFF), status[49], status[50], status[52], status[53], status[54]),
+                      :deviceTimeOffset => Time.local(2000 + (status[48] & 0xFF), status[49], status[50], status[52], status[53], status[54]) - timestamp,
                       :dayOfWeek => dayOfWeek
                   }
                   commandQueue.shift if fromQueue
