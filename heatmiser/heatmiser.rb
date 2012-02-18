@@ -34,16 +34,18 @@ class Heatmiser
       pinLo = pin & 0xFF
       pinHi = (pin >> 8) & 0xFF
       loop do
+        mutex.synchronize do
+          data[:lastStatus][:valid] = false
+        end
         TCPSocket.open data[:hostname], 8068 do | socket |
           queryCommand = HeatmiserCRC.new(
               [0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           deviceTimeOffset = 0.0
           lastTimeSet = Time.now
           count = 0
-          loop do
-            sleep 5
+          while count < 10 do
             count += 1
-            break if count > 10
+            sleep 5
             command = queryCommand
             fromQueue = false
             mutex.synchronize do
