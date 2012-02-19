@@ -82,11 +82,11 @@ class Heatmiser
               end
               log.debug "command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
               socket.write command.pack('c*')
-              status = nil
+              status = []
               timeout 5 do
                 status = socket.read(81).unpack('c*')
-                log.debug "status:#{(status.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
               end
+              log.debug "status:#{(status.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
               timestamp = Time.now
               crcHi = status.pop & 0xFF
               crcLo = status.pop & 0xFF
