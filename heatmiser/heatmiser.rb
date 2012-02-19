@@ -86,8 +86,8 @@ class Heatmiser
               timeout 5 do
                 status = socket.read(81).unpack('c*')
               end
-              log.debug "status:#{(status.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
               timestamp = Time.now
+              log.debug "status:#{(status.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
               crcHi = status.pop & 0xFF
               crcLo = status.pop & 0xFF
               crc = HeatmiserCRC.new status
