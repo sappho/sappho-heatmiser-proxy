@@ -2,6 +2,7 @@ require 'heatmiser_crc'
 require 'thread'
 require 'timeout'
 require 'socket'
+require 'logger'
 
 class Heatmiser
 
@@ -24,14 +25,19 @@ class Heatmiser
             :dayOfWeek => 0
         },
         :commandQueue => [],
-        :mutex => @mutex,
+        :mutex => @mutex
     }
   end
 
   def monitor
     @thread = Thread.new @data do | data |
+      log = Logger.new 'heatmiser.log'
+      log.level = Logger::INFO
+      log.formatter = proc { |severity, datetime, progname, msg| "#{msg}\n" }
       mutex = data[:mutex]
       commandQueue = data[:commandQueue]
+      hostname = data[:hostname]
+      port = 8068
       pin = data[:pin]
       pinLo = pin & 0xFF
       pinHi = (pin >> 8) & 0xFF
@@ -39,7 +45,9 @@ class Heatmiser
         mutex.synchronize do
           data[:lastStatus][:valid] = false
         end
-        TCPSocket.open data[:hostname], 8068 do | socket |
+        log.info "opening connection to heatmiser at #{hostname}:#{port}"
+        TCPSocket.open hostname, port do | socket |
+          log.info 'connected'
           queryCommand = HeatmiserCRC.new(
               [0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           deviceTimeOffset = 0.0
@@ -51,7 +59,8 @@ class Heatmiser
             fromQueue = false
             mutex.synchronize do
               fromQueue = commandQueue.size > 0
-              command = commandQueue[0] if fromQueue
+              command = commandQueue[0][:command].dup if fromQueue
+              log.info "requested command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
             end
             if !fromQueue and deviceTimeOffset.abs > 5.0
               timeNow = Time.now
@@ -65,6 +74,7 @@ class Heatmiser
                                          timeNow.hour,
                                          timeNow.min,
                                          timeNow.sec]).appendCRC
+              log.info "clock correction:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
             end
             begin
               socket.write command.pack('c*')
@@ -79,22 +89,28 @@ class Heatmiser
               if (status[0] & 0xFF) == 0x94 and status[1] == 0x51 and status[2] == 0 and
                   crc.crcHi == crcHi and crc.crcLo == crcLo
                 status << crcLo << crcHi
+                timeSinceLastValid = timestamp - data[:lastStatus][:timestamp]
+                dayOfWeek = status[51]
+                dayOfWeek = 0 if dayOfWeek == 7
+                deviceTimeOffset = Time.local(2000 + (status[48] & 0xFF), status[49], status[50],
+                                              status[52], status[53], status[54]) - timestamp
+                requestedTemperature = status[25] & 0xFF
+                sensedTemperature = ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0
+                heatOn = status[47] == 1
+                keyLockOn = status[29] == 1
+                frostProtectOn = status[30] == 1
+                logger.info "#{(status.collect {|byte| "%02x " % (byte & 0xFF)}).join}#{requestedTemperature} #{sensedTemperature} #{heatOn} #{keyLockOn} #{frostProtectOn} #{timeSinceLastValid} #{dayOfWeek} #{deviceTimeOffset}"
                 mutex.synchronize do
-                  timeSinceLastValid = timestamp - data[:lastStatus][:timestamp]
-                  dayOfWeek = status[51]
-                  dayOfWeek = 0 if dayOfWeek == 7
-                  deviceTimeOffset = Time.local(2000 + (status[48] & 0xFF), status[49], status[50],
-                                                status[52], status[53], status[54]) - timestamp
                   data[:lastStatus] = {
                       :valid => true,
                       :raw => status,
                       :timestamp => timestamp,
                       :timeSinceLastValid => timeSinceLastValid,
-                      :sensedTemperature => ((status[44] & 0xFF) | ((status[45] << 8) & 0x0F00)) / 10.0,
-                      :requestedTemperature => status[25] & 0xFF,
-                      :heatOn => status[47] == 1,
-                      :keyLockOn => status[29] == 1,
-                      :frostProtectOn => status[30] == 1,
+                      :sensedTemperature => sensedTemperature,
+                      :requestedTemperature => requestedTemperature,
+                      :heatOn => heatOn,
+                      :keyLockOn => keyLockOn,
+                      :frostProtectOn => frostProtectOn,
                       :deviceTimeOffset => deviceTimeOffset,
                       :dayOfWeek => dayOfWeek
                   }
@@ -105,11 +121,12 @@ class Heatmiser
             rescue
             end
           end
+          log.info 'closing connection to heatmiser'
           socket.close
           sleep 5
         end
       end
-    end.run
+    end
   end
 
   def lastStatus
@@ -129,6 +146,18 @@ class Heatmiser
           :dayOfWeek => status[:dayOfWeek]
       }
     end
+  end
+
+  def pin
+    @data[:pin]
+  end
+
+  def mutex
+    @mutex
+  end
+
+  def wait
+    @thread.join
   end
 
 end
