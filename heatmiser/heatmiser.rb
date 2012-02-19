@@ -41,6 +41,8 @@ class Heatmiser
       pin = data[:pin]
       pinLo = pin & 0xFF
       pinHi = (pin >> 8) & 0xFF
+      queryCommand = HeatmiserCRC.new(
+          [0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
       loop do
         mutex.synchronize do
           data[:lastStatus][:valid] = false
@@ -48,8 +50,6 @@ class Heatmiser
         log.info "opening connection to heatmiser at #{hostname}:#{port}"
         TCPSocket.open hostname, port do | socket |
           log.info 'connected'
-          queryCommand = HeatmiserCRC.new(
-              [0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           deviceTimeOffset = 0.0
           errorCount = 0
           while errorCount < 10 do
