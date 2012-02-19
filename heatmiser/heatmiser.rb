@@ -80,6 +80,7 @@ class Heatmiser
               end
             end
             begin
+              log.info "command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
               socket.write command.pack('c*')
               status = nil
               timeout 5 do
