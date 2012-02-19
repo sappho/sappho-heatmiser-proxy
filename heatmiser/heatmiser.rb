@@ -156,6 +156,14 @@ class Heatmiser
     end
   end
 
+  def queueCommand command
+    @mutex.synchronize do
+      @data[:commandQueue] << {
+        :command => command.dup
+      }
+    end
+  end
+
   def pin
     @data[:pin]
   end
