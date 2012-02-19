@@ -104,7 +104,7 @@ class Heatmiser
                 heatOn = status[47] == 1
                 keyLockOn = status[29] == 1
                 frostProtectOn = status[30] == 1
-                logger.info "#{(status.collect {|byte| "%02x " % (byte & 0xFF)}).join}#{requestedTemperature} #{sensedTemperature} #{heatOn} #{keyLockOn} #{frostProtectOn} #{timeSinceLastValid} #{dayOfWeek} #{deviceTimeOffset}"
+                log.info "#{(status.collect {|byte| "%02x " % (byte & 0xFF)}).join}#{requestedTemperature} #{sensedTemperature} #{heatOn} #{keyLockOn} #{frostProtectOn} #{timeSinceLastValid} #{dayOfWeek} #{deviceTimeOffset}"
                 mutex.synchronize do
                   data[:lastStatus] = {
                       :valid => true,
