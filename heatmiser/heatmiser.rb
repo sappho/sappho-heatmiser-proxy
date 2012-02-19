@@ -123,7 +123,9 @@ class Heatmiser
                 end
                 errorCount = 0
               end
-            rescue
+            rescue => error
+              log.error error.message
+              log.error error.backtrace
             end
           end
           log.info 'closing connection to heatmiser'
