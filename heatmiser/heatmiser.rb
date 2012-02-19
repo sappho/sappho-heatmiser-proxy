@@ -81,6 +81,7 @@ class Heatmiser
                 end
               end
               log.debug "command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
+              startTime = Time.now
               socket.write command.pack('c*')
               status = []
               timeout 5 do
@@ -104,7 +105,7 @@ class Heatmiser
                 heatOn = status[47] == 1
                 keyLockOn = status[29] == 1
                 frostProtectOn = status[30] == 1
-                log.info "#{(status.collect {|byte| "%02x " % (byte & 0xFF)}).join}#{requestedTemperature} #{sensedTemperature} #{heatOn} #{keyLockOn} #{frostProtectOn} #{timeSinceLastValid} #{dayOfWeek} #{deviceTimeOffset}"
+                log.info "#{(status.collect {|byte| "%02x " % (byte & 0xFF)}).join}#{requestedTemperature} #{sensedTemperature} #{heatOn} #{keyLockOn} #{frostProtectOn} #{timeSinceLastValid} #{dayOfWeek} #{deviceTimeOffset} #{timestamp - startTime}"
                 mutex.synchronize do
                   data[:lastStatus] = {
                       :valid => true,
