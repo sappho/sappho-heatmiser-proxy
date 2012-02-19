@@ -60,21 +60,24 @@ class Heatmiser
             mutex.synchronize do
               fromQueue = commandQueue.size > 0
               command = commandQueue[0][:command].dup if fromQueue
-              log.info "requested command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
             end
-            if !fromQueue and deviceTimeOffset.abs > 5.0
-              timeNow = Time.now
-              dayOfWeek = timeNow.wday
-              dayOfWeek = 7 if dayOfWeek == 0
-              command = HeatmiserCRC.new([0xA3, 0x12, 0x00, pinLo, pinHi, 0x01, 0x2B, 0x00, 0x07,
-                                         timeNow.year - 2000,
-                                         timeNow.month,
-                                         timeNow.day,
-                                         dayOfWeek,
-                                         timeNow.hour,
-                                         timeNow.min,
-                                         timeNow.sec]).appendCRC
-              log.info "clock correction:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+            if fromQueue
+              log.info "requested command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+            else
+              if deviceTimeOffset.abs > 5.0
+                timeNow = Time.now
+                dayOfWeek = timeNow.wday
+                dayOfWeek = 7 if dayOfWeek == 0
+                command = HeatmiserCRC.new([0xA3, 0x12, 0x00, pinLo, pinHi, 0x01, 0x2B, 0x00, 0x07,
+                                           timeNow.year - 2000,
+                                           timeNow.month,
+                                           timeNow.day,
+                                           dayOfWeek,
+                                           timeNow.hour,
+                                           timeNow.min,
+                                           timeNow.sec]).appendCRC
+                log.info "clock correction:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+              end
             end
             begin
               socket.write command.pack('c*')
