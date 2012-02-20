@@ -8,15 +8,15 @@ class HeatmiserClient
 
   def initialize client
     @client = client
-    @peer = client.getpeername
-    @peer = (4 ... 8).map{|pos|@peer[pos]}.join('.')
+    @clientIP = client.getpeername
+    @clientIP = (4 ... 8).map{|pos|@clientIP[pos]}.join('.')
   end
 
   def session
-    Thread.new @client, @peer do | client, peer |
+    Thread.new @client, @clientIP do | client, clientIP |
       status = HeatmiserStatus.instance
       log = TraceLog.instance
-      log.info "client connected: #{peer}"
+      log.info "client connected: #{clientIP}"
       errorCount = 0
       while errorCount < 5 do
         begin
@@ -26,7 +26,7 @@ class HeatmiserClient
             packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0x0F00)
             command += read(packetSize - 5)
             log.debug "client command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
-            CommandQueue.instance.push peer, command unless (command[0] & 0xFF) == 0x93
+            CommandQueue.instance.push clientIP, command unless (command[0] & 0xFF) == 0x93
             status.get { client.write status.raw.pack('c*') if status.valid }
             errorCount = 0
           end
@@ -37,13 +37,13 @@ class HeatmiserClient
           break
         end
       end
-      log.info "client disconnected: #{peer}"
+      log.info "client disconnected: #{clientIP}"
     end
   end
 
   def read size
     data = @client.read size
-    raise "unable to read #{size} bytes from client #{@peer} - presuming it has disconnected" unless data and data.size == size
+    raise "unable to read #{size} bytes from client #{@clientIP} - presuming it has disconnected" unless data and data.size == size
     data.unpack('c*')
   end
 
