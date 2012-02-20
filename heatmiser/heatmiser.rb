@@ -13,18 +13,15 @@ class Heatmiser
 
   include Singleton
 
-  def initialize
-    config = SystemConfiguration.instance.config
-    @hostname = config['heatmiser.address']
-    @pin = Integer config['heatmiser.pin']
-  end
-
   def monitor
-    @thread = Thread.new @hostname, @pin do | hostname, pin |
+    @thread = Thread.new do
       status = HeatmiserStatus.instance
       queue = CommandQueue.instance
       log = TraceLog.instance
-      port = 8068
+      config = SystemConfiguration.instance.config
+      hostname = config['heatmiser.address']
+      port = Integer config['heatmiser.port']
+      pin = Integer config['heatmiser.pin']
       pinLo = pin & 0xFF
       pinHi = (pin >> 8) & 0xFF
       queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC

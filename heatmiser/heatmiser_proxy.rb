@@ -7,7 +7,7 @@ class HeatmiserProxy
 
   def serve
     Thread.new do
-      port = 8068
+      port = Integer SystemConfiguration.instance.config['heatmiser.port']
       log = TraceLog.instance
       log.info "opening server port #{port}"
       TCPServer.open port do | server |
