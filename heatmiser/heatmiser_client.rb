@@ -1,7 +1,6 @@
 require 'thread'
 require 'socket'
 require 'trace_log'
-require 'heatmiser'
 require 'heatmiser_status'
 require 'command_queue'
 
@@ -13,7 +12,6 @@ class HeatmiserClient
 
   def session
     Thread.new @client do | client |
-      heatmiser = Heatmiser.instance
       status = HeatmiserStatus.instance
       log = TraceLog.instance
       peer = client.getpeername
@@ -28,7 +26,7 @@ class HeatmiserClient
             packetSize = (header[1] & 0xFF) | ((header[2] << 8) & 0x0F00)
             command = header + client.read(packetSize - 5).unpack('c*')
             log.debug "client command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
-            CommandQueue.push peer, command unless (command[0] & 0xFF) == 0x93
+            CommandQueue.instance.push peer, command unless (command[0] & 0xFF) == 0x93
             status.get { client.write status.raw.pack('c*') if status.valid }
             errorCount = 0
           end
