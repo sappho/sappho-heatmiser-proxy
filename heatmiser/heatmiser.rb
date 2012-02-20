@@ -7,12 +7,17 @@ require 'thread'
 require 'timeout'
 require 'socket'
 require 'logger'
+require 'yaml'
 
 class Heatmiser
 
   include Singleton
 
-  attr_accessor :hostname, :pin
+  def initialize
+    config = YAML.load_file 'heatmiser.yml'
+    @hostname = config['hostname']
+    @pin = config['pin']
+  end
 
   def monitor
     @thread = Thread.new @hostname, @pin do | hostname, pin |
