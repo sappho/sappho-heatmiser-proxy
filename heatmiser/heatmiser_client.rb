@@ -35,8 +35,7 @@ class HeatmiserClient
         rescue Timeout::Error
           errorCount += 1
         rescue => error
-          log.error error.message
-          log.error error.backtrace
+          log.error error
           break
         end
       end

@@ -74,8 +74,7 @@ class Heatmiser
                 errorCount = 0
               end
             rescue => error
-              log.error error.message
-              log.error error.backtrace
+              log.error error
             end
           end
           log.info "closing connection to heatmiser at #{hostname}:#{port}"
