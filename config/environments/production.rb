@@ -4,6 +4,9 @@ SapphoHeatmiser::Application.configure do
   # Code is not reloaded between requests
   config.cache_classes = true
 
+  # Set a default base context root
+  config.action_controller.relative_url_root = '/heatmiser'
+
   # Full error reports are disabled and caching is turned on
   config.consider_all_requests_local       = false
   config.action_controller.perform_caching = true
