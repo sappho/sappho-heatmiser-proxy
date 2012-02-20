@@ -16,7 +16,7 @@ class Heatmiser
   def initialize
     config = YAML.load_file 'heatmiser.yml'
     @hostname = config['hostname']
-    @pin = config['pin']
+    @pin = Integer config['pin']
   end
 
   def monitor
