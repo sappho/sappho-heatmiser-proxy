@@ -9,11 +9,11 @@ class HeatmiserProxy
     Thread.new do
       port = Integer SystemConfiguration.instance.config['heatmiser.port']
       log = TraceLog.instance
-      log.info "opening server port #{port}"
+      log.info "opening proxy server port #{port}"
       TCPServer.open port do | server |
-        log.info "server port #{port} is now open"
+        log.info "proxy server port #{port} is now open"
         loop do
-          log.info "listening for new clients on port #{port}"
+          log.info "listening for new clients on proxy server port #{port}"
           HeatmiserClient.new(server.accept).session
         end
       end
