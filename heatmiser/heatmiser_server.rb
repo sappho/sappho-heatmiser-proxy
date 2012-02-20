@@ -4,8 +4,9 @@ require 'thread'
 
 Thread.abort_on_exception = true
 
-hm = Heatmiser.new(ARGV[0], Integer(ARGV[1]))
+hm = Heatmiser.instance
+hm.hostname = ARGV[0]
+hm.pin = Integer ARGV[1]
 hm.monitor
-hmp = HeatmiserProxy.new hm
-hmp.monitor
+HeatmiserProxy.new.serve
 hm.wait
