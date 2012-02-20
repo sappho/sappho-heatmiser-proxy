@@ -30,7 +30,7 @@ class TraceLog
   def error error
     @mutex.synchronize do
       @log.error "error! #{error.message}"
-      @log.error error.backtrace
+      error.backtrace.each { |error| @log.error error }
     end if @log.error?
   end
 
