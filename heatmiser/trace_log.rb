@@ -30,7 +30,7 @@ class TraceLog
 
   def error error
     @mutex.synchronize do
-      @log.error "Error! #{error.message}"
+      @log.error "error! #{error.message}"
       @log.error error.backtrace
     end if @log.error?
   end
