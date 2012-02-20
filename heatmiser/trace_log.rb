@@ -1,7 +1,7 @@
 require 'singleton'
 require 'thread'
 require 'logger'
-require 'yaml'
+require 'system_configuration'
 
 class TraceLog
 
@@ -10,9 +10,9 @@ class TraceLog
   @mutex = Mutex.new
 
   def initialize
-    config = YAML.load_file 'log.yml'
-    @log = Logger.new(config['stdout'] ? STDOUT : config['filename'])
-    @log.level = config['debug'] ? Logger::DEBUG : Logger::INFO
+    config = SystemConfiguration.instance.config
+    @log = Logger.new(config['log.stdout'] ? STDOUT : config['log.filename'])
+    @log.level = config['log.debug'] ? Logger::DEBUG : Logger::INFO
     @log.formatter = proc { |severity, datetime, progname, message| "#{message}\n" }
   end
 

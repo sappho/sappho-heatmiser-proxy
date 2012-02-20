@@ -7,16 +7,16 @@ require 'thread'
 require 'timeout'
 require 'socket'
 require 'logger'
-require 'yaml'
+require 'system_configuration'
 
 class Heatmiser
 
   include Singleton
 
   def initialize
-    config = YAML.load_file 'heatmiser.yml'
-    @hostname = config['hostname']
-    @pin = Integer config['pin']
+    config = SystemConfiguration.instance.config
+    @hostname = config['heatmiser.address']
+    @pin = Integer config['heatmiser.pin']
   end
 
   def monitor
