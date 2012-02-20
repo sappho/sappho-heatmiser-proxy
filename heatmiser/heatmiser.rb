@@ -27,7 +27,7 @@ class Heatmiser
         TCPSocket.open hostname, port do | socket |
           log.info "connected to heatmiser at #{hostname}:#{port}"
           errorCount = 0
-          while errorCount < 10 do
+          while errorCount < 5 do
             begin
               errorCount += 1
               sleep 5
