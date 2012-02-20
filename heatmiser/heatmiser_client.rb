@@ -22,10 +22,10 @@ class HeatmiserClient
         begin
           timeout 5 do
             command = read 5
-            log.debug "header:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
+            log.debug "header: #{TraceLog.hex command}" if log.debug?
             packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0x0F00)
             command += read(packetSize - 5)
-            log.debug "client command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
+            log.debug "client command: #{TraceLog.hex command}" if log.debug?
             CommandQueue.instance.push clientIP, command unless (command[0] & 0xFF) == 0x93
             status.get { client.write status.raw.pack('c*') if status.valid }
             errorCount = 0

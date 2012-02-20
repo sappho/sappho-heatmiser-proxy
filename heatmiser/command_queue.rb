@@ -11,7 +11,7 @@ class CommandQueue
   @log = TraceLog.instance
 
   def push clientIP, command
-    @log.info "client #{clientIP} requests command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+    @log.info "client #{clientIP} requests command: #{TraceLog.hex command}"
     @mutex.synchronize do
       @queue << {
           :clientIP => clientIP,
@@ -26,7 +26,7 @@ class CommandQueue
       if @queue.size > 0
         queue = @queue[0]
         command = queue[:command].dup
-        @log.info "client #{queue[:clientIP]} command executing:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+        @log.info "client #{queue[:clientIP]} command executing: #{TraceLog.hex command}"
       end
     end
     command
@@ -36,7 +36,7 @@ class CommandQueue
     @mutex.synchronize do
       if @queue.size > 0
         queue = @queue[0]
-        @log.info "client #{queue[:clientIP]} command completed:#{(queue[:command].collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+        @log.info "client #{queue[:clientIP]} command completed: #{TraceLog.hex queue[:command]}"
         @queue.shift
       end
     end

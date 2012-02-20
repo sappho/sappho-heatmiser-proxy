@@ -39,4 +39,8 @@ class TraceLog
     @log.debug?
   end
 
+  def TraceLog.hex bytes
+    (bytes.collect {|byte| "%02x " % (byte & 0xFF)}).join
+  end
+
 end

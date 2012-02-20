@@ -53,7 +53,7 @@ class HeatmiserStatus
         @timeSinceLastValid = timestamp - @timestamp
         @timestamp = timestamp
         @sampleTime = sampleTime
-        @log.info "#{(raw.collect {|byte| "%02x " % (byte & 0xFF)}).join}#{@requestedTemperature} #{@sensedTemperature} #{@heatOn} #{@keyLockOn} #{@frostProtectOn} #{@timeSinceLastValid} #{@dayOfWeek} #{@deviceTimeOffset} #{sampleTime}"
+        @log.info "#{TraceLog.hex raw}#{@requestedTemperature} #{@sensedTemperature} #{@heatOn} #{@keyLockOn} #{@frostProtectOn} #{@timeSinceLastValid} #{@dayOfWeek} #{@deviceTimeOffset} #{sampleTime}"
       rescue => error
         @log.error error
         @valid = false

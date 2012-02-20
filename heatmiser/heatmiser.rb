@@ -47,10 +47,10 @@ class Heatmiser
                                              timeNow.hour,
                                              timeNow.min,
                                              timeNow.sec]).appendCRC
-                  log.info "clock correction:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+                  log.info "clock correction: #{TraceLog.hex command}"
                 end
               end
-              log.debug "sending command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
+              log.debug "sending command: #{TraceLog.hex command}" if log.debug?
               reply = []
               startTime = Time.now
               timeout 5 do
@@ -58,7 +58,7 @@ class Heatmiser
                 reply = socket.read(81).unpack('c*')
               end
               timestamp = Time.now
-              log.debug "reply:#{(reply.collect {|byte| " %02x" % (byte & 0xFF)}).join}" if log.debug?
+              log.debug "reply: #{TraceLog.hex reply}" if log.debug?
               crcHi = reply.pop & 0xFF
               crcLo = reply.pop & 0xFF
               crc = HeatmiserCRC.new reply
