@@ -65,9 +65,10 @@ class Heatmiser
               if (reply[0] & 0xFF) == 0x94 and reply[1] == 0x51 and reply[2] == 0 and
                   crc.crcHi == crcHi and crc.crcLo == crcLo
                 reply << crcLo << crcHi
-                status.set reply, timestamp, (timestamp - startTime)
-                queue.completed if queuedCommand
-                errorCount = 0
+                status.set reply, timestamp, (timestamp - startTime) do
+                  queue.completed if queuedCommand
+                  errorCount = 0
+                end
               end
             rescue => error
               log.error error

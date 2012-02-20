@@ -54,6 +54,7 @@ class HeatmiserStatus
         @timestamp = timestamp
         @sampleTime = sampleTime
         @log.info "#{TraceLog.hex raw}#{@requestedTemperature} #{@sensedTemperature} #{@heatOn} #{@keyLockOn} #{@frostProtectOn} #{@timeSinceLastValid} #{@dayOfWeek} #{@deviceTimeOffset} #{sampleTime}"
+        yield
       rescue => error
         @log.error error
         @valid = false
