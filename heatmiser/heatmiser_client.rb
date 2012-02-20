@@ -17,22 +17,19 @@ class HeatmiserClient
       status = HeatmiserStatus.instance
       log = TraceLog.instance
       log.info "client #{clientIP} connected"
-      errorCount = 0
-      while errorCount < 3 do
+      loop do
         begin
-          timeout 5 do
+          timeout 15 do
             command = read 5
             log.debug "header: #{TraceLog.hex command}" if log.debug?
             packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0x0F00)
             command += read(packetSize - 5)
-            log.debug "client command: #{TraceLog.hex command}" if log.debug?
             CommandQueue.instance.push clientIP, command unless (command[0] & 0xFF) == 0x93
             status.get { client.write status.raw.pack('c*') if status.valid }
-            errorCount = 0
           end
         rescue Timeout::Error
           log.info "no command received from client #{clientIP} which might be dormant"
-          errorCount += 1
+          break
         rescue => error
           log.error error
           break

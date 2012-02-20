@@ -7,9 +7,8 @@ class TraceLog
 
   include Singleton
 
-  @mutex = Mutex.new
-
   def initialize
+    @mutex = Mutex.new
     config = SystemConfiguration.instance.config
     @log = Logger.new(config['log.stdout'] ? STDOUT : config['log.filename'])
     @log.level = config['log.debug'] ? Logger::DEBUG : Logger::INFO

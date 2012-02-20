@@ -6,9 +6,11 @@ class CommandQueue
 
   include Singleton
 
-  @queue = []
-  @mutex = Mutex.new
-  @log = TraceLog.instance
+  def initialize
+    @queue = []
+    @mutex = Mutex.new
+    @log = TraceLog.instance
+  end
 
   def push clientIP, command
     @log.info "client #{clientIP} requests command: #{TraceLog.hex command}"

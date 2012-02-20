@@ -10,9 +10,8 @@ class HeatmiserStatus
       :requestedTemperature, :heatOn, :keyLockOn, :frostProtectOn, :deviceTimeOffset,
       :dayOfWeek
 
-  @mutex = Mutex.new
-
   def initialize
+    @mutex = Mutex.new
     @log = TraceLog.instance
     @valid = false
     @raw = []

@@ -30,7 +30,7 @@ class Heatmiser
           while errorCount < 5 do
             begin
               errorCount += 1
-              sleep 5
+              sleep 2
               command = queryCommand
               if queuedCommand = queue.get
                 command = queuedCommand
