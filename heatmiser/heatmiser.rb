@@ -1,4 +1,3 @@
-require 'singleton'
 require 'heatmiser_crc'
 require 'heatmiser_status'
 require 'trace_log'
@@ -6,12 +5,9 @@ require 'command_queue'
 require 'thread'
 require 'timeout'
 require 'socket'
-require 'logger'
 require 'system_configuration'
 
 class Heatmiser
-
-  include Singleton
 
   def monitor
     @thread = Thread.new do

@@ -4,7 +4,7 @@ require 'thread'
 
 Thread.abort_on_exception = true
 
-hm = Heatmiser.instance
+hm = Heatmiser.new
 hm.monitor
 HeatmiserProxy.new.serve
 hm.wait
