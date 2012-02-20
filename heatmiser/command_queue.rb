@@ -8,9 +8,10 @@ class CommandQueue
 
   @queue = []
   @mutex = Mutex.new
+  @log = TraceLog.instance
 
   def push clientIP, command
-    TraceLog.instance.info "client #{clientIP} requests command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+    @log.info "client #{clientIP} requests command:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
     @mutex.synchronize do
       @queue << {
           :clientIP => clientIP,
@@ -25,7 +26,7 @@ class CommandQueue
       if @queue.size > 0
         queue = @queue[0]
         command = queue[:command].dup
-        TraceLog.instance.info "client #{queue[:clientIP]} command executing:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+        @log.info "client #{queue[:clientIP]} command executing:#{(command.collect {|byte| " %02x" % (byte & 0xFF)}).join}"
       end
     end
     command
@@ -35,7 +36,7 @@ class CommandQueue
     @mutex.synchronize do
       if @queue.size > 0
         queue = @queue[0]
-        TraceLog.instance.info "client #{queue[:clientIP]} command completed:#{(queue[:command].collect {|byte| " %02x" % (byte & 0xFF)}).join}"
+        @log.info "client #{queue[:clientIP]} command completed:#{(queue[:command].collect {|byte| " %02x" % (byte & 0xFF)}).join}"
         @queue.shift
       end
     end
