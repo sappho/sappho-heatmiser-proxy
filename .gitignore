@@ -13,6 +13,7 @@
 # Ignore all logfiles and tempfiles.
 /log/*.log
 /heatmiser/*.log
+/heatmiser/*.yml
 /tmp
 
 .idea/

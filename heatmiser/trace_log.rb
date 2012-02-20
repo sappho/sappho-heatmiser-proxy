@@ -1,16 +1,18 @@
 require 'singleton'
 require 'thread'
 require 'logger'
+require 'yaml'
 
 class TraceLog
 
   include Singleton
 
-  @log = Logger.new STDOUT #'heatmiser.log'
   @mutex = Mutex.new
 
   def initialize
-    @log.level = Logger::DEBUG
+    config = YAML.load_file 'log.yml'
+    @log = Logger.new(config['stdout'] ? STDOUT : config['filename'])
+    @log.level = config['debug'] ? Logger::DEBUG : Logger::INFO
     @log.formatter = proc { |severity, datetime, progname, message| "#{message}\n" }
   end
 
