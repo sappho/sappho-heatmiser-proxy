@@ -16,9 +16,9 @@ class HeatmiserClient
     Thread.new @client, @clientIP do | client, clientIP |
       status = HeatmiserStatus.instance
       log = TraceLog.instance
-      log.info "client connected: #{clientIP}"
+      log.info "client #{clientIP} connected"
       errorCount = 0
-      while errorCount < 5 do
+      while errorCount < 3 do
         begin
           timeout 5 do
             command = read 5
@@ -31,13 +31,14 @@ class HeatmiserClient
             errorCount = 0
           end
         rescue Timeout::Error
+          log.info "no command received from client #{clientIP} which might be dormant"
           errorCount += 1
         rescue => error
           log.error error
           break
         end
       end
-      log.info "client disconnected: #{clientIP}"
+      log.info "client #{clientIP} disconnected"
     end
   end
 
