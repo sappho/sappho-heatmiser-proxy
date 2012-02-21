@@ -26,11 +26,9 @@ class Heatmiser
         log.info "opening connection to heatmiser at #{hostname}:#{port}"
         TCPSocket.open hostname, port do | socket |
           log.info "connected to heatmiser at #{hostname}:#{port}"
-          errorCount = 0
-          while errorCount < 5 do
+          loop do
             begin
-              errorCount += 1
-              sleep 4
+              sleep 5
               command = queryCommand
               if queuedCommand = queue.get
                 command = queuedCommand
@@ -53,7 +51,7 @@ class Heatmiser
               log.debug "sending command: #{TraceLog.hex command}" if log.debug?
               reply = []
               startTime = Time.now
-              timeout 10 do
+              timeout 20 do
                 socket.write command.pack('c*')
                 reply = socket.read(81).unpack('c*')
               end
@@ -67,16 +65,22 @@ class Heatmiser
                 reply << crcLo << crcHi
                 status.set reply, timestamp, (timestamp - startTime) do
                   queue.completed if queuedCommand
-                  errorCount = 0
                 end
               end
+            rescue Timeout::Error
+              log.info "heatmiser at #{hostname}:#{port} is not responding - assuming connection down"
+              break
             rescue => error
               log.error error
+              break
             end
           end
           log.info "closing connection to heatmiser at #{hostname}:#{port}"
-          socket.close
-          sleep 5
+          begin
+            socket.close
+          rescue
+          end
+          sleep 10
         end
       end
     end
