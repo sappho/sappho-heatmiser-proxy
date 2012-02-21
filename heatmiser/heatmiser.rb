@@ -30,7 +30,7 @@ class Heatmiser
           while errorCount < 5 do
             begin
               errorCount += 1
-              sleep 2
+              sleep 4
               command = queryCommand
               if queuedCommand = queue.get
                 command = queuedCommand
@@ -53,7 +53,7 @@ class Heatmiser
               log.debug "sending command: #{TraceLog.hex command}" if log.debug?
               reply = []
               startTime = Time.now
-              timeout 5 do
+              timeout 10 do
                 socket.write command.pack('c*')
                 reply = socket.read(81).unpack('c*')
               end
