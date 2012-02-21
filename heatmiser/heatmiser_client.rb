@@ -3,6 +3,7 @@ require 'socket'
 require 'trace_log'
 require 'heatmiser_status'
 require 'command_queue'
+require 'client_register'
 
 class HeatmiserClient
 
