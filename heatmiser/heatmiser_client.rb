@@ -35,6 +35,7 @@ class HeatmiserClient
           break
         end
       end
+      client.close
       log.info "client #{clientIP} disconnected"
     end
   end
