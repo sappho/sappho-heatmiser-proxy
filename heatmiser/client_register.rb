@@ -12,9 +12,10 @@ class ClientRegister
   end
 
   def put client, max = 8
-    ip = client.getpeername
-    ip = (4 ... 8).map{|pos|ip[pos]}.join('.')
     @mutex.synchronize do
+      raise "duplicate client connection on #{@clients[client]}" if @clients.has_key? client
+      ip = client.getpeername
+      ip = (4 ... 8).map{|pos|ip[pos]}.join('.')
       @clients[client] = ip
       TraceLog.instance.info "client #{ip} connected"
       log
@@ -30,7 +31,10 @@ class ClientRegister
     @mutex.synchronize do
       ip = @clients[client]
       @clients.delete client
-      client.close
+      begin
+        client.close
+      rescue
+      end
       TraceLog.instance.info "client #{ip} disconnected"
       log
     end
