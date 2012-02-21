@@ -77,10 +77,7 @@ class Heatmiser
               end
             end
             log.info "closing connection to heatmiser at #{hostname}:#{port}"
-            begin
-              socket.close
-            rescue
-            end
+            socket.close
           end
         rescue => error
           log.error error
