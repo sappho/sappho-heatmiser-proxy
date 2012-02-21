@@ -26,6 +26,7 @@ class HeatmiserClient
             command += read(packetSize - 5)
             CommandQueue.instance.push clientIP, command unless (command[0] & 0xFF) == 0x93
             status.get { client.write status.raw.pack('c*') if status.valid }
+            log.info "command received from client #{clientIP} so it is alive"
           end
         rescue Timeout::Error
           log.info "no command received from client #{clientIP} which might be dormant"
