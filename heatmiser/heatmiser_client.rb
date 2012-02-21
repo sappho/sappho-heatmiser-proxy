@@ -19,7 +19,7 @@ class HeatmiserClient
       log.info "client #{clientIP} connected"
       loop do
         begin
-          timeout 10 do
+          timeout 15 do
             command = read 5
             log.debug "header: #{TraceLog.hex command}" if log.debug?
             packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0x0F00)
