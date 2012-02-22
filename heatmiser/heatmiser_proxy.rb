@@ -8,22 +8,19 @@ class HeatmiserProxy
 
   def serve
     Thread.new do
+      clients = ClientRegister.instance
       port = Integer SystemConfiguration.instance.config['heatmiser.port']
       log = TraceLog.instance
       log.info "opening proxy server port #{port}"
       TCPServer.open port do | server |
         log.info "proxy server port #{port} is now open"
-        clients = ClientRegister.instance
         loop do
-          log.info "listening for new clients on proxy server port #{port}"
-          client = server.accept
-          begin
-            clients.put client
-            HeatmiserClient.new.session client
-          rescue => error
-            log.error error
+          if clients.maxAlreadyConnected?
+            sleep 1
+          else
+            log.info "listening for new clients on proxy server port #{port}"
+            HeatmiserClient.new.session server.accept
           end
-          clients.close client
         end
       end
     end

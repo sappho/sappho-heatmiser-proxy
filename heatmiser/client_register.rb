@@ -36,7 +36,7 @@ class ClientRegister
     @mutex.synchronize { @clients[client] }
   end
 
-  def maxClientsConnected?
+  def maxAlreadyConnected?
     @mutex.synchronize { @clients.size >= @max }
   end
 
