@@ -5,6 +5,9 @@ require 'heatmiser_status'
 require 'command_queue'
 require 'client_register'
 
+class ReadError < Interrupt
+end
+
 class HeatmiserClient
 
   def session client
@@ -27,21 +30,27 @@ class HeatmiserClient
             log.info "command received from client #{@ip} so it is alive"
           end
         rescue Timeout::Error
-          log.info "no command received from client #{@ip} which might be dormant"
+          log.info "no command received from client #{@ip} so presuming it dormant"
+          break
+        rescue ReadError
+          log.info "unable to receive data from client #{@ip} so presuming it has disconnected"
           break
         rescue => error
           log.error error
           break
         end
       end
-      @client.close
+      begin
+        @client.close
+      rescue
+      end
       @clients.unregister @client
     end
   end
 
   def read size
     data = @client.read size
-    raise "unable to read #{size} bytes from client #{@ip} - presuming it has disconnected" unless data and data.size == size
+    raise ReadError unless data and data.size == size
     data.unpack('c*')
   end
 
