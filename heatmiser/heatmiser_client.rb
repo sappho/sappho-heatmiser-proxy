@@ -8,8 +8,10 @@ require 'client_register'
 class HeatmiserClient
 
   def session client
+    @clients = ClientRegister.instance
+    @clients.register client
+    @ip = @clients.ip client
     @client = client
-    @ip = ClientRegister.instance.ip client
     Thread.new do
       status = HeatmiserStatus.instance
       log = TraceLog.instance
@@ -32,6 +34,8 @@ class HeatmiserClient
           break
         end
       end
+      @client.close
+      @clients.unregister @client
     end
   end
 
