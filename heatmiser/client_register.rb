@@ -43,7 +43,7 @@ class ClientRegister
   private
 
   def log
-    @log.info "clients: #{(@clients.collect{|client, ip| ip}).join ' '}"
+    @log.info "clients: #{@clients.size > 0 ? (@clients.collect{|client, ip| ip}).join(', ') : 'none'}"
   end
 
 end
