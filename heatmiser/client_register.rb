@@ -1,6 +1,7 @@
 require 'singleton'
 require 'thread'
 require 'trace_log'
+require 'system_configuration'
 
 class ClientRegister
 
@@ -9,17 +10,25 @@ class ClientRegister
   def initialize
     @mutex = Mutex.new
     @clients = {}
+    @max = Integer SystemConfiguration.instance.config['heatmiser.clients.max']
+    @log = TraceLog.instance
   end
 
-  def put client, max = 8
+  def register client
     @mutex.synchronize do
-      raise "duplicate client connection on #{@clients[client]}" if @clients.has_key? client
       ip = client.getpeername
-      ip = (4 ... 8).map{|pos|ip[pos]}.join('.')
-      @clients[client] = ip
-      TraceLog.instance.info "client #{ip} connected"
+      @clients[client] = ip = (4 ... 8).map{|pos|ip[pos]}.join('.')
+      @log.info "client #{ip} connected"
       log
-      raise "limit of #{max} heatmiser clients has been exceeded" if @clients.size > max
+    end
+  end
+
+  def unregister client
+    @mutex.synchronize do
+      ip = @clients[client]
+      @clients.delete client
+      @log.info "client #{ip} disconnected"
+      log
     end
   end
 
@@ -27,23 +36,14 @@ class ClientRegister
     @mutex.synchronize { @clients[client] }
   end
 
-  def close client
-    @mutex.synchronize do
-      ip = @clients[client]
-      @clients.delete client
-      begin
-        client.close
-      rescue
-      end
-      TraceLog.instance.info "client #{ip} disconnected"
-      log
-    end
+  def maxClientsConnected?
+    @mutex.synchronize { @clients.size >= @max }
   end
 
   private
 
   def log
-    TraceLog.instance.info "clients: #{(@clients.collect {|client, ip| ip}).join ' '}"
+    @log.info "clients: #{(@clients.collect{|client, ip| ip}).join ' '}"
   end
 
 end
