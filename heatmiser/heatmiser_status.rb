@@ -8,7 +8,45 @@ class HeatmiserStatus
 
   attr_reader :valid, :timestamp, :sampleTime, :timeSinceLastValid, :sensedTemperature,
       :requestedTemperature, :heatOn, :keyLockOn, :frostProtectOn, :deviceTimeOffset,
-      :dayOfWeek
+      :dayOfWeek, :schedule
+
+  class TimedTemperature
+
+    attr_reader :hour, :minute, :temperature
+
+    def initialize raw, bytePosition
+      @hour = raw[bytePosition] & 0xFF
+      @minute = raw[bytePosition + 1] & 0xFF
+      @temperature = raw[bytePosition + 2] & 0xFF
+    end
+
+    def valid?
+      @hour < 24 and @minute < 60
+    end
+
+    def description
+      "#{@hour}:#{@minute}-#{@temperature}"
+    end
+
+  end
+
+  class Schedule
+
+    attr_reader :schedule
+
+    def initialize raw, bytePosition
+      @schedule = []
+      (0 ... 4).map do |position|
+        timedTemperature = TimedTemperature.new(raw, bytePosition + 3 * position)
+        @schedule << timedTemperature if timedTemperature.valid?
+      end
+    end
+
+    def description
+      (@schedule.collect {|timedTemperature| timedTemperature.description}).join(' ')
+    end
+
+  end
 
   def initialize
     @mutex = Mutex.new
@@ -20,11 +58,15 @@ class HeatmiserStatus
     @timeSinceLastValid = 0.0
     @sensedTemperature = 0.0
     @requestedTemperature = 0
+    @holidayReturnTime = Time.now
+    @holdMinutes = 0
     @heatOn = false
     @keyLockOn = false
     @frostProtectOn = false
+    @holidayOn = false
     @deviceTimeOffset = 0.0
     @dayOfWeek = 0
+    @schedule = {}
   end
 
   def raw
@@ -40,19 +82,32 @@ class HeatmiserStatus
       @valid = true
       begin
         @raw = raw.dup
-        @sensedTemperature = ((raw[44] & 0xFF) | ((raw[45] << 8) & 0x0F00)) / 10.0
-        @requestedTemperature = raw[25] & 0xFF
+        @sensedTemperature = ((raw[44] & 0xFF) | ((raw[45] << 8) & 0xFF00)) / 10.0
+        @holdMinutes = (raw[38] & 0xFF) | ((raw[39] << 8) & 0xFF00)
         @heatOn = raw[47] == 1
         @keyLockOn = raw[29] == 1
         @frostProtectOn = raw[30] == 1
+        @holidayOn = raw[37] == 1
+        @holidayReturnTime = Time.local(2000 + (raw[32] & 0xFF), raw[33], raw[34], raw[35], raw[36], 0)
+        @requestedTemperature = @frostProtectOn ? raw[24] & 0xFF : raw[25] & 0xFF
         @deviceTimeOffset = Time.local(2000 + (raw[48] & 0xFF), raw[49], raw[50],
                                        raw[52], raw[53], raw[54]) - timestamp
         dayOfWeek = raw[51]
         @dayOfWeek = dayOfWeek == 7 ? 0 : dayOfWeek
+        @schedule = {
+            :weekday => Schedule.new(@raw, 55),
+            :weekend => Schedule.new(@raw, 67)
+        }
         @timeSinceLastValid = timestamp - @timestamp
         @timestamp = timestamp
         @sampleTime = sampleTime
-        @log.info "#{TraceLog.hex raw}#{@requestedTemperature} #{@sensedTemperature} #{@heatOn} #{@keyLockOn} #{@frostProtectOn} #{@timeSinceLastValid} #{@dayOfWeek} #{@deviceTimeOffset} #{sampleTime}"
+        if @log.debug?
+          @log.debug "#{TraceLog.hex raw}"
+          @log.debug "#{@requestedTemperature} #{@holdMinutes / 60}:#{@holdMinutes % 60} #{@sensedTemperature} #{@heatOn} #{@keyLockOn} #{@frostProtectOn} #{@timeSinceLastValid} #{@dayOfWeek} #{@deviceTimeOffset} #{sampleTime} #{@holidayOn} #{@holidayReturnTime}"
+          @log.debug "weekday: #{@schedule[:weekday].description} weekend: #{@schedule[:weekend].description}"
+        else
+          @log.info "received status: heating is #{@heatOn ? "on" : "off"} because required temperature is #{@requestedTemperature} and actual is #{@sensedTemperature}"
+        end
         yield
       rescue => error
         @log.error error
