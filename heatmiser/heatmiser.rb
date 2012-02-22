@@ -23,8 +23,8 @@ class Heatmiser
       queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
       loop do
         status.invalidate
-        log.info "opening connection to heatmiser at #{hostname}:#{port}"
         begin
+          log.info "opening connection to heatmiser at #{hostname}:#{port}"
           TCPSocket.open hostname, port do | socket |
             log.info "connected to heatmiser at #{hostname}:#{port}"
             loop do
