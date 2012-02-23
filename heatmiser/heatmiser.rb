@@ -34,7 +34,7 @@ class Heatmiser
                 if queuedCommand = queue.get
                   command = queuedCommand
                 else
-                  if status.get{status.valid? ? status.deviceTimeOffset : 0.0}.abs > 5.0
+                  if status.get{status.valid ? status.deviceTimeOffset : 0.0}.abs > 5.0
                     timeNow = Time.now
                     dayOfWeek = timeNow.wday
                     dayOfWeek = 7 if dayOfWeek == 0
