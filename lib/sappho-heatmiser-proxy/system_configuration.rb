@@ -17,7 +17,7 @@ module Sappho
         attr_reader :config
 
         def initialize
-          @config = YAML.load_file 'config.yml'
+          @config = YAML.load_file(File.expand_path(ARGV[0] || 'heatmiser-proxy.yml'))
         end
 
       end
