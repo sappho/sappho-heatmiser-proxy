@@ -23,7 +23,7 @@ module Sappho
           @log = Logger.new(config['log.stdout'] ? STDOUT : config['log.filename'])
           @log.level = config['log.debug'] ? Logger::DEBUG : Logger::INFO
           @log.formatter = proc { |severity, datetime, progname, message| "#{message}\n" }
-          @log.info "#{APPNAME} version #{VERSION} - #{HOMEPAGE}"
+          @log.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
         end
 
         def info message
