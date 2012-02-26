@@ -7,17 +7,18 @@ module Sappho
   module Heatmiser
     module Proxy
 
-      require 'singleton'
-      require 'yaml'
+      require 'sappho-heatmiser-proxy/heatmiser'
+      require 'sappho-heatmiser-proxy/heatmiser_proxy'
+      require 'thread'
 
-      class SystemConfiguration
+      class CommandLine
 
-        include Singleton
-
-        attr_reader :config
-
-        def initialize
-          @config = YAML.load_file 'config.yml'
+        def CommandLine.process
+          Thread.abort_on_exception = true
+          hm = Heatmiser.new
+          hm.monitor
+          HeatmiserProxy.new.serve
+          hm.wait
         end
 
       end

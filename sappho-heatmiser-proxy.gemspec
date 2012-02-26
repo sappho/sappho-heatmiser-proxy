@@ -5,15 +5,15 @@ require "sappho-heatmiser-proxy/version"
 # See http://docs.rubygems.org/read/chapter/20#page85 for info on writing gemspecs
 
 Gem::Specification.new do |s|
-  s.name        = "sappho-heatmiser-proxy"
+  s.name        = Sappho::Heatmiser::Proxy::NAME
   s.version     = Sappho::Heatmiser::Proxy::VERSION
-  s.authors     = ["Andrew Heald"]
-  s.email       = ["andrew@heald.co.uk"]
+  s.authors     = Sappho::Heatmiser::Proxy::AUTHORS
+  s.email       = Sappho::Heatmiser::Proxy::EMAILS
   s.homepage    = Sappho::Heatmiser::Proxy::HOMEPAGE
-  s.summary     = "Acts as a proxy for Heatmiser hardware to allow continuous monitoring and control by many controllers"
-  s.description = "See the project home page for more information"
+  s.summary     = Sappho::Heatmiser::Proxy::SUMMARY
+  s.description = Sappho::Heatmiser::Proxy::DESCRIPTION
 
-  s.rubyforge_project = "sappho-heatmiser-proxy"
+  s.rubyforge_project = Sappho::Heatmiser::Proxy::NAME
 
   s.files         = `git ls-files -- {bin,lib}/*`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
