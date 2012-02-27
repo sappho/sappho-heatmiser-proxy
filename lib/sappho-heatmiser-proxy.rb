@@ -8,17 +8,34 @@ module Sappho
     module Proxy
 
       require 'sappho-heatmiser-proxy/heatmiser'
-      require 'sappho-heatmiser-proxy/heatmiser_proxy'
+      require 'sappho-heatmiser-proxy/heatmiser_client'
+      require 'sappho-heatmiser-proxy/client_register'
+      require 'sappho-heatmiser-proxy/trace_log'
       require 'thread'
+      require 'socket'
 
       class CommandLine
 
         def CommandLine.process
           Thread.abort_on_exception = true
-          hm = Heatmiser.new
-          hm.monitor
-          HeatmiserProxy.new.serve
-          hm.wait
+          Thread.new do
+            clients = ClientRegister.instance
+            port = Integer SystemConfiguration.instance.config['heatmiser.port']
+            log = TraceLog.instance
+            log.info "opening proxy server port #{port}"
+            TCPServer.open port do | server |
+              log.info "proxy server port #{port} is now open"
+              loop do
+                if clients.maxAlreadyConnected?
+                  sleep 1
+                else
+                  log.info "listening for new clients on proxy server port #{port}"
+                  Thread.new server.accept { |client| HeatmiserClient.new(client).communicate }
+                end
+              end
+            end
+          end
+          Thread.new{Heatmiser.new.monitor}.join
         end
 
       end
