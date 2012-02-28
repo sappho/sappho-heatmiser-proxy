@@ -10,8 +10,6 @@ module Sappho
       require 'singleton'
       require 'thread'
       require 'logger'
-      require 'sappho-heatmiser-proxy/system_configuration'
-      require 'sappho-heatmiser-proxy/version'
 
       class TraceLog
 
@@ -19,21 +17,21 @@ module Sappho
 
         def initialize
           @mutex = Mutex.new
-          $stdout.sync = true
           @log = Logger.new $stdout
-          @log.level = SystemConfiguration.instance.config['log.debug'] ? Logger::DEBUG : Logger::INFO
-          @log.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
+          @log.level = ENV['heatmiser.log.level'] == 'debug' ? Logger::DEBUG : Logger::INFO
         end
 
         def info message
           @mutex.synchronize do
             @log.info message
+            $stdout.flush
           end if @log.info?
         end
 
         def debug message
           @mutex.synchronize do
             @log.debug message
+            $stdout.flush
           end if @log.debug?
         end
 
@@ -41,6 +39,7 @@ module Sappho
           @mutex.synchronize do
             @log.error "error! #{error.message}"
             error.backtrace.each { |error| @log.error error }
+            $stdout.flush
           end if @log.error?
         end
 

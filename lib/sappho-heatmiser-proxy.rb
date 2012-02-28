@@ -11,13 +11,14 @@ module Sappho
       require 'sappho-heatmiser-proxy/heatmiser_client'
       require 'sappho-heatmiser-proxy/client_register'
       require 'sappho-heatmiser-proxy/trace_log'
+      require 'sappho-heatmiser-proxy/version'
       require 'thread'
       require 'socket'
 
       class CommandLine
 
         def CommandLine.process
-          Thread.abort_on_exception = true
+          TraceLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
           Thread.new do
             clients = ClientRegister.instance
             port = Integer SystemConfiguration.instance.config['heatmiser.port']
