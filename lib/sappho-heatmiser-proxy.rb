@@ -30,7 +30,9 @@ module Sappho
                   sleep 1
                 else
                   log.info "listening for new clients on proxy server port #{port}"
-                  Thread.new server.accept { |client| HeatmiserClient.new(client).communicate }
+                  Thread.new server.accept do |client|
+                    HeatmiserClient.new(client).communicate
+                  end
                 end
               end
             end
