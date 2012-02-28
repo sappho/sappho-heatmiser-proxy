@@ -19,10 +19,9 @@ module Sappho
 
         def initialize
           @mutex = Mutex.new
-          config = SystemConfiguration.instance.config
-          @log = Logger.new(config['log.stdout'] ? STDOUT : config['log.filename'])
-          @log.level = config['log.debug'] ? Logger::DEBUG : Logger::INFO
-          @log.formatter = proc { |severity, datetime, progname, message| "#{message}\n" }
+          $stdout.sync = true
+          @log = Logger.new $stdout
+          @log.level = SystemConfiguration.instance.config['log.debug'] ? Logger::DEBUG : Logger::INFO
           @log.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
         end
 
