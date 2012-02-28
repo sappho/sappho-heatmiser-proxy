@@ -37,7 +37,9 @@ module Sappho
               end
             end
           end
-          Thread.new{Heatmiser.new.monitor}.join
+          Thread.new do
+            Heatmiser.new.monitor
+          end.join
         end
 
       end
