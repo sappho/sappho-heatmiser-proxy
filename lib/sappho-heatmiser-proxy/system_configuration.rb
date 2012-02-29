@@ -14,10 +14,14 @@ module Sappho
 
         include Singleton
 
-        attr_reader :config
+        attr_reader :config, :port, :pinLo, :pinHi
 
         def initialize
           @config = YAML.load_file(File.expand_path(ARGV[0] || 'heatmiser-proxy.yml'))
+          @port = Integer @config['heatmiser.port']
+          pin = Integer @config['heatmiser.pin']
+          @pinLo = pin & 0xFF
+          @pinHi = (pin >> 8) & 0xFF
         end
 
       end

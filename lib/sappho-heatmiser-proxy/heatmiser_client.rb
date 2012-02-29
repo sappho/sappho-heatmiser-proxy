@@ -12,6 +12,7 @@ module Sappho
       require 'sappho-heatmiser-proxy/heatmiser_status'
       require 'sappho-heatmiser-proxy/command_queue'
       require 'sappho-heatmiser-proxy/client_register'
+      require 'sappho-heatmiser-proxy/system_configuration'
 
       class HeatmiserClient
 
@@ -25,6 +26,7 @@ module Sappho
         end
 
         def communicate
+          config = SystemConfiguration.instance
           active = true
           while active do
             begin
@@ -42,7 +44,9 @@ module Sappho
                 else
                   command = command.unpack('c*')
                   @log.debug "header: #{TraceLog.hex command}" if @log.debug?
-                  packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0x0F00)
+                  raise ClientDataError, "invalid pin" unless (command[3] & 0xFF) == config.pinLo and (command[4] & 0xFF) == config.pinHi
+                  packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0xFF00)
+                  raise ClientDataError, "invalid packet size" if packetSize < 7 or packetSize > 128
                   command += read(packetSize - 5).unpack('c*')
                   CommandQueue.instance.push @ip, command unless (command[0] & 0xFF) == 0x93
                   @status.get { @client.write @status.raw.pack('c*') if @status.valid }
@@ -50,10 +54,10 @@ module Sappho
                 end
               end
             rescue Timeout::Error
-              @log.info "no command received from client #{@ip} so presuming it dormant"
+              @log.info "timeout on client #{@ip} so presuming it dormant"
               active = false
-            rescue HeatmiserClient::ReadError
-              @log.info "unable to receive data from client #{@ip} so presuming it has disconnected"
+            rescue ClientDataError => error
+              @log.info "data error from client #{@ip}: #{error.message}"
               active = false
             rescue => error
               @log.error error
@@ -69,11 +73,11 @@ module Sappho
 
         def read size
           data = @client.read size
-          raise HeatmiserClient::ReadError unless data and data.size == size
+          raise ClientDataError, "nothing received so presuming it has disconnected" unless data and data.size == size
           data
         end
 
-        class ReadError < Interrupt
+        class ClientDataError < Interrupt
         end
 
       end

@@ -21,19 +21,15 @@ module Sappho
           status = HeatmiserStatus.instance
           queue = CommandQueue.instance
           log = TraceLog.instance
-          config = SystemConfiguration.instance.config
-          hostname = config['heatmiser.address']
-          port = Integer config['heatmiser.port']
-          pin = Integer config['heatmiser.pin']
-          pinLo = pin & 0xFF
-          pinHi = (pin >> 8) & 0xFF
-          queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, pinLo, pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
+          config = SystemConfiguration.instance
+          hostname = config.config['heatmiser.address']
+          queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           loop do
             status.invalidate
             begin
-              log.info "opening connection to heatmiser at #{hostname}:#{port}"
-              TCPSocket.open hostname, port do | socket |
-                log.info "connected to heatmiser at #{hostname}:#{port}"
+              log.info "opening connection to heatmiser at #{hostname}:#{config.port}"
+              TCPSocket.open hostname, config.port do | socket |
+                log.info "connected to heatmiser at #{hostname}:#{config.port}"
                 loop do
                   begin
                     sleep 5
@@ -45,7 +41,7 @@ module Sappho
                         timeNow = Time.now
                         dayOfWeek = timeNow.wday
                         dayOfWeek = 7 if dayOfWeek == 0
-                        command = HeatmiserCRC.new([0xA3, 0x12, 0x00, pinLo, pinHi, 0x01, 0x2B, 0x00, 0x07,
+                        command = HeatmiserCRC.new([0xA3, 0x12, 0x00, config.pinLo, config.pinHi, 0x01, 0x2B, 0x00, 0x07,
                                                    timeNow.year - 2000,
                                                    timeNow.month,
                                                    timeNow.day,
@@ -76,14 +72,14 @@ module Sappho
                       end
                     end
                   rescue Timeout::Error
-                    log.info "heatmiser at #{hostname}:#{port} is not responding - assuming connection down"
+                    log.info "heatmiser at #{hostname}:#{config.port} is not responding - assuming connection down"
                     break
                   rescue => error
                     log.error error
                     break
                   end
                 end
-                log.info "closing connection to heatmiser at #{hostname}:#{port}"
+                log.info "closing connection to heatmiser at #{hostname}:#{config.port}"
                 socket.close
               end
             rescue => error

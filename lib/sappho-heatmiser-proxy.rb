@@ -21,7 +21,7 @@ module Sappho
           TraceLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
           Thread.new do
             clients = ClientRegister.instance
-            port = Integer SystemConfiguration.instance.config['heatmiser.port']
+            port = SystemConfiguration.instance.port
             log = TraceLog.instance
             log.info "opening proxy server port #{port}"
             TCPServer.open port do | server |
