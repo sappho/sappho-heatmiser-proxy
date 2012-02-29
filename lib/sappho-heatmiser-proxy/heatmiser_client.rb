@@ -36,7 +36,7 @@ module Sappho
                         'error: no response from heatmiser unit in last minute' :
                         @status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid'
                   }
-                  @log.info "client check - reply: #{reply}"
+                  @log.info "client #{@ip} checking status - reply: #{reply}"
                   @client.write "#{reply}\r\n"
                   active = false
                 else
