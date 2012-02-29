@@ -25,7 +25,8 @@ module Sappho
         end
 
         def communicate
-          loop do
+          active = true
+          while active do
             begin
               timeout 20 do
                 command = read 5
@@ -35,12 +36,14 @@ module Sappho
                         'error: no response from heatmiser unit in last minute' :
                         @status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid'
                   }
-                  @log.info "client requested status - reply: #{reply}"
-                  @client.writeline reply
+                  @log.info "client check - reply: #{reply}"
+                  @client.write "#{reply}\r\n"
+                  active = false
                 else
+                  command = command.unpack('c*')
                   @log.debug "header: #{TraceLog.hex command}" if @log.debug?
                   packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0x0F00)
-                  command += read(packetSize - 5)
+                  command += read(packetSize - 5).unpack('c*')
                   CommandQueue.instance.push @ip, command unless (command[0] & 0xFF) == 0x93
                   @status.get { @client.write @status.raw.pack('c*') if @status.valid }
                   @log.info "command received from client #{@ip} so it is alive"
@@ -48,13 +51,13 @@ module Sappho
               end
             rescue Timeout::Error
               @log.info "no command received from client #{@ip} so presuming it dormant"
-              break
+              active = false
             rescue HeatmiserClient::ReadError
               @log.info "unable to receive data from client #{@ip} so presuming it has disconnected"
-              break
+              active = false
             rescue => error
               @log.error error
-              break
+              active = false
             end
           end
           begin
@@ -67,7 +70,7 @@ module Sappho
         def read size
           data = @client.read size
           raise HeatmiserClient::ReadError unless data and data.size == size
-          data.unpack('c*')
+          data
         end
 
         class ReadError < Interrupt
