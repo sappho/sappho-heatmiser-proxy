@@ -29,12 +29,20 @@ module Sappho
             begin
               timeout 20 do
                 command = read 5
-                @log.debug "header: #{TraceLog.hex command}" if @log.debug?
-                packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0x0F00)
-                command += read(packetSize - 5)
-                CommandQueue.instance.push @ip, command unless (command[0] & 0xFF) == 0x93
-                @status.get { @client.write @status.raw.pack('c*') if @status.valid }
-                @log.info "command received from client #{@ip} so it is alive"
+                if command == 'check'
+                  @client.write @status.get {
+                    @status.timeSinceLastValid > 60 ?
+                        'error: no response from heatmiser unit in last minute' :
+                        @status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid'
+                  }
+                else
+                  @log.debug "header: #{TraceLog.hex command}" if @log.debug?
+                  packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0x0F00)
+                  command += read(packetSize - 5)
+                  CommandQueue.instance.push @ip, command unless (command[0] & 0xFF) == 0x93
+                  @status.get { @client.write @status.raw.pack('c*') if @status.valid }
+                  @log.info "command received from client #{@ip} so it is alive"
+                end
               end
             rescue Timeout::Error
               @log.info "no command received from client #{@ip} so presuming it dormant"
