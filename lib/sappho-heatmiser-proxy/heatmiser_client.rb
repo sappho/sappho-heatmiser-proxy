@@ -30,11 +30,13 @@ module Sappho
               timeout 20 do
                 command = read 5
                 if command == 'check'
-                  @client.write @status.get {
+                  reply = @status.get {
                     @status.timeSinceLastValid > 60 ?
                         'error: no response from heatmiser unit in last minute' :
                         @status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid'
                   }
+                  @log.info "client requested status - reply: #{reply}"
+                  @client.writeline reply
                 else
                   @log.debug "header: #{TraceLog.hex command}" if @log.debug?
                   packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0x0F00)
