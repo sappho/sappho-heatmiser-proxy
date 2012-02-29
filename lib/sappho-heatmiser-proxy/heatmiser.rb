@@ -22,14 +22,14 @@ module Sappho
           queue = CommandQueue.instance
           log = TraceLog.instance
           config = SystemConfiguration.instance
-          hostname = config.config['heatmiser.address']
+          desc = "heatmiser at #{config.heatmiserHostname}:#{config.heatmiserPort}"
           queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           loop do
             status.invalidate
             begin
-              log.info "opening connection to heatmiser at #{hostname}:#{config.port}"
-              TCPSocket.open hostname, config.port do | socket |
-                log.info "connected to heatmiser at #{hostname}:#{config.port}"
+              log.info "opening connection to #{desc}"
+              TCPSocket.open config.heatmiserHostname, config.heatmiserPort do | socket |
+                log.info "connected to #{desc}"
                 loop do
                   begin
                     sleep 5
@@ -72,14 +72,14 @@ module Sappho
                       end
                     end
                   rescue Timeout::Error
-                    log.info "heatmiser at #{hostname}:#{config.port} is not responding - assuming connection down"
+                    log.info "#{desc} is not responding - assuming connection down"
                     break
                   rescue => error
                     log.error error
                     break
                   end
                 end
-                log.info "closing connection to heatmiser at #{hostname}:#{config.port}"
+                log.info "closing connection to #{desc}"
                 socket.close
               end
             rescue => error

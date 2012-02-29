@@ -19,15 +19,13 @@ module Sappho
         def initialize
           @mutex = Mutex.new
           @clients = {}
-          @max = Integer SystemConfiguration.instance.config['heatmiser.clients.max']
-          @log = TraceLog.instance
         end
 
         def register client
           @mutex.synchronize do
             ip = client.getpeername
             @clients[client] = ip = (4 ... 8).map{|pos|ip[pos]}.join('.')
-            @log.info "client #{ip} connected"
+            TraceLog.instance.info "client #{ip} connected"
             log
           end
         end
@@ -36,7 +34,7 @@ module Sappho
           @mutex.synchronize do
             ip = @clients[client]
             @clients.delete client
-            @log.info "client #{ip} disconnected"
+            TraceLog.instance.info "client #{ip} disconnected"
             log
           end
         end
@@ -46,13 +44,14 @@ module Sappho
         end
 
         def maxAlreadyConnected?
-          @mutex.synchronize { @clients.size >= @max }
+          @mutex.synchronize { @clients.size >= SystemConfiguration.instance.maxClients }
         end
 
         private
 
         def log
-          @log.info "clients: #{@clients.size > 0 ? (@clients.collect{|client, ip| ip}).join(', ') : 'none'}"
+          TraceLog.instance.info "clients: #{@clients.size > 0 ?
+              (@clients.collect{|client, ip| ip}).join(', ') : 'none'}"
         end
 
       end
