@@ -6,13 +6,13 @@
 module Sappho
   module Heatmiser
     module Proxy
-      NAME = "sappho-heatmiser-proxy"
-      VERSION = "0.0.8"
-      AUTHORS = ["Andrew Heald"]
-      EMAILS = ["andrew@heald.co.uk"]
-      HOMEPAGE = "https://github.com/sappho/sappho-heatmiser-proxy/wiki"
-      SUMMARY = "Acts as a proxy for Heatmiser hardware to allow continuous monitoring and control by many controllers"
-      DESCRIPTION = "See the project home page for more information"
+      NAME = 'sappho-heatmiser-proxy'
+      VERSION = '0.0.9'
+      AUTHORS = ['Andrew Heald']
+      EMAILS = ['andrew@heald.co.uk']
+      HOMEPAGE = 'https://github.com/sappho/sappho-heatmiser-proxy/wiki'
+      SUMMARY = 'Acts as a proxy for Heatmiser hardware to allow continuous monitoring and control by many controllers'
+      DESCRIPTION = 'See the project home page for more information'
     end
   end
 end
