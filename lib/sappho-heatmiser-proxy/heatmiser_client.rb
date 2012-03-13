@@ -7,12 +7,12 @@ module Sappho
   module Heatmiser
     module Proxy
 
-      require 'socket'
       require 'sappho-heatmiser-proxy/trace_log'
       require 'sappho-heatmiser-proxy/heatmiser_status'
       require 'sappho-heatmiser-proxy/command_queue'
       require 'sappho-heatmiser-proxy/client_register'
       require 'sappho-heatmiser-proxy/system_configuration'
+      require 'sappho-socket/safe_socket'
 
       class HeatmiserClient
 
@@ -20,7 +20,8 @@ module Sappho
           @clients = ClientRegister.instance
           @clients.register client
           @ip = @clients.ip client
-          @client = client
+          @client = Sappho::Socket::SafeSocket.new 20
+          @client.attach client
           @status = HeatmiserStatus.instance
           @log = TraceLog.instance
         end
@@ -30,28 +31,26 @@ module Sappho
           active = true
           while active do
             begin
-              timeout 20 do
-                command = read 5
-                if command == 'check'
-                  reply = @status.get {
-                    @status.timeSinceLastValid > 60 ?
-                        'error: no response from heatmiser unit in last minute' :
-                        @status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid'
-                  }
-                  @log.info "client #{@ip} checking status - reply: #{reply}"
-                  @client.write "#{reply}\r\n"
-                  active = false
-                else
-                  command = command.unpack('c*')
-                  @log.debug "header: #{TraceLog.hex command}" if @log.debug?
-                  raise ClientDataError, "invalid pin" unless (command[3] & 0xFF) == config.pinLo and (command[4] & 0xFF) == config.pinHi
-                  packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0xFF00)
-                  raise ClientDataError, "invalid packet size" if packetSize < 7 or packetSize > 128
-                  command += read(packetSize - 5).unpack('c*')
-                  CommandQueue.instance.push @ip, command unless (command[0] & 0xFF) == 0x93
-                  @status.get { @client.write @status.raw.pack('c*') if @status.valid }
-                  @log.info "command received from client #{@ip} so it is alive"
-                end
+              command = read 5
+              if command == 'check'
+                reply = @status.get {
+                  @status.timeSinceLastValid > 60 ?
+                      'error: no response from heatmiser unit in last minute' :
+                      @status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid'
+                }
+                @log.info "client #{@ip} checking status - reply: #{reply}"
+                @client.write "#{reply}\r\n"
+                active = false
+              else
+                command = command.unpack('c*')
+                @log.debug "header: #{TraceLog.hex command}" if @log.debug?
+                raise ClientDataError, "invalid pin" unless (command[3] & 0xFF) == config.pinLo and (command[4] & 0xFF) == config.pinHi
+                packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0xFF00)
+                raise ClientDataError, "invalid packet size" if packetSize < 7 or packetSize > 128
+                command += read(packetSize - 5).unpack('c*')
+                CommandQueue.instance.push @ip, command unless (command[0] & 0xFF) == 0x93
+                @status.get { @client.write @status.raw.pack('c*') if @status.valid }
+                @log.info "command received from client #{@ip} so it is alive"
               end
             rescue Timeout::Error
               @log.info "timeout on client #{@ip} so presuming it dormant"
@@ -64,10 +63,7 @@ module Sappho
               active = false
             end
           end
-          begin
-            @client.close
-          rescue
-          end
+          @client.close
           @clients.unregister @client
         end
 
