@@ -12,8 +12,7 @@ module Sappho
       require 'sappho-heatmiser-proxy/trace_log'
       require 'sappho-heatmiser-proxy/command_queue'
       require 'sappho-heatmiser-proxy/system_configuration'
-      require 'timeout'
-      require 'socket'
+      require 'sappho-socket/safe_socket'
 
       class Heatmiser
 
@@ -24,24 +23,22 @@ module Sappho
           config = SystemConfiguration.instance
           desc = "heatmiser at #{config.heatmiserHostname}:#{config.heatmiserPort}"
           queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
+          socket = Sappho::Socket::SafeSocket.new 5
           loop do
             log.info "opening connection to #{desc}"
-            socket = nil
             begin
-              timeout 5 do
-                socket = TCPSocket.open config.heatmiserHostname, config.heatmiserPort
-              end
-              log.info "connected to #{desc}"
+              socket.open config.heatmiserHostname, config.heatmiserPort
             rescue Timeout::Error
               log.info "timeout while connecting to #{desc}"
             rescue => error
               log.error error
             end
-            if socket
+            if socket.open?
+              log.info "connected to #{desc}"
               active = true
               while active do
                 begin
-                  sleep 5
+                  socket.settle 5
                   command = queryCommand
                   if queuedCommand = queue.get
                     command = queuedCommand
@@ -64,10 +61,8 @@ module Sappho
                   log.debug "sending command: #{TraceLog.hex command}" if log.debug?
                   reply = []
                   startTime = Time.now
-                  timeout 20 do
-                    socket.write command.pack('c*')
-                    reply = socket.read(81).unpack('c*')
-                  end
+                  socket.write command.pack('c*')
+                  reply = socket.read(81).unpack('c*')
                   timestamp = Time.now
                   log.debug "reply: #{TraceLog.hex reply}" if log.debug?
                   crcHi = reply.pop & 0xFF
@@ -89,14 +84,11 @@ module Sappho
                 end
               end
               status.invalidate
-              begin
-                socket.close
-              rescue
-              end
+              socket.close
               log.info "closed connection to #{desc}"
             end
-            log.info "waiting 10 seconds before attempting to re-connect to #{desc}"
-            sleep 10
+            log.info "waiting 5 seconds before attempting to re-connect to #{desc}"
+            socket.settle 5
           end
         end
 
