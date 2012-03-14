@@ -11,7 +11,6 @@ module Sappho
       require 'sappho-heatmiser-proxy/heatmiser_status'
       require 'sappho-heatmiser-proxy/command_queue'
       require 'sappho-heatmiser-proxy/system_configuration'
-      require 'sappho-socket/safe_socket'
 
       class HeatmiserClient
 
