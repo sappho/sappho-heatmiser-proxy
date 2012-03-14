@@ -10,7 +10,7 @@ module Sappho
       require 'sappho-heatmiser-proxy/heatmiser'
       require 'sappho-heatmiser-proxy/heatmiser_client'
       require 'sappho-heatmiser-proxy/client_register'
-      require 'sappho-heatmiser-proxy/trace_log'
+      require 'sappho-socket/auto_flush_log'
       require 'sappho-heatmiser-proxy/version'
       require 'thread'
       require 'socket'
@@ -18,11 +18,11 @@ module Sappho
       class CommandLine
 
         def CommandLine.process
-          TraceLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
+          Sappho::Socket::AutoFlushLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
           Thread.new do
             clients = ClientRegister.instance
             port = SystemConfiguration.instance.heatmiserPort
-            log = TraceLog.instance
+            log = Sappho::Socket::AutoFlushLog.instance
             log.info "opening proxy server port #{port}"
             TCPServer.open port do | server |
               log.info "proxy server port #{port} is now open"

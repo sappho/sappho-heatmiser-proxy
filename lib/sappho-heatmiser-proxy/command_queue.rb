@@ -9,20 +9,20 @@ module Sappho
 
       require 'singleton'
       require 'thread'
-      require 'sappho-heatmiser-proxy/trace_log'
+      require 'sappho-socket/auto_flush_log'
 
       class CommandQueue
 
-        include Singleton
+        include Singleton, Sappho::Socket::LogUtilities
 
         def initialize
           @queue = []
           @mutex = Mutex.new
-          @log = TraceLog.instance
+          @log = Sappho::Socket::AutoFlushLog.instance
         end
 
         def push clientIP, command
-          @log.info "client #{clientIP} requests command: #{TraceLog.hex command}"
+          @log.info "client #{clientIP} requests command: #{hexString command}"
           @mutex.synchronize do
             @queue << {
                 :clientIP => clientIP,
@@ -37,7 +37,7 @@ module Sappho
             if @queue.size > 0
               queue = @queue[0]
               command = queue[:command].dup
-              @log.info "client #{queue[:clientIP]} command executing: #{TraceLog.hex command}"
+              @log.info "client #{queue[:clientIP]} command executing: #{hexString command}"
             end
           end
           command
@@ -47,7 +47,7 @@ module Sappho
           @mutex.synchronize do
             if @queue.size > 0
               queue = @queue[0]
-              @log.info "client #{queue[:clientIP]} command completed: #{TraceLog.hex queue[:command]}"
+              @log.info "client #{queue[:clientIP]} command completed: #{hexString queue[:command]}"
               @queue.shift
             end
           end

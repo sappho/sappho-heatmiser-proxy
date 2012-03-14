@@ -9,11 +9,11 @@ module Sappho
 
       require 'singleton'
       require 'thread'
-      require 'sappho-heatmiser-proxy/trace_log'
+      require 'sappho-socket/auto_flush_log'
 
       class HeatmiserStatus
 
-        include Singleton
+        include Singleton, Sappho::Socket::LogUtilities
 
         attr_reader :valid, :timestamp, :sampleTime, :timeSinceLastValid, :sensedTemperature,
             :requestedTemperature, :heatOn, :keyLockOn, :frostProtectOn, :deviceTimeOffset,
@@ -59,7 +59,7 @@ module Sappho
 
         def initialize
           @mutex = Mutex.new
-          @log = TraceLog.instance
+          @log = Sappho::Socket::AutoFlushLog.instance
           @valid = false
           @raw = []
           @timestamp = Time.now
@@ -111,7 +111,7 @@ module Sappho
               @timestamp = timestamp
               @sampleTime = sampleTime
               if @log.debug?
-                @log.debug "#{TraceLog.hex raw}"
+                @log.debug "#{hexString raw}"
                 @log.debug "#{@requestedTemperature} #{@holdMinutes / 60}:#{@holdMinutes % 60} #{@sensedTemperature} #{@heatOn} #{@keyLockOn} #{@frostProtectOn} #{@timeSinceLastValid} #{@dayOfWeek} #{@deviceTimeOffset} #{sampleTime} #{@holidayOn} #{@holidayReturnTime}"
                 @log.debug "weekday: #{@schedule[:weekday].description} weekend: #{@schedule[:weekend].description}"
               else

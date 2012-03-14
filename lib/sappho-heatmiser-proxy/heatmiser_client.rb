@@ -7,7 +7,7 @@ module Sappho
   module Heatmiser
     module Proxy
 
-      require 'sappho-heatmiser-proxy/trace_log'
+      require 'sappho-socket/auto_flush_log'
       require 'sappho-heatmiser-proxy/heatmiser_status'
       require 'sappho-heatmiser-proxy/command_queue'
       require 'sappho-heatmiser-proxy/client_register'
@@ -16,6 +16,8 @@ module Sappho
 
       class HeatmiserClient
 
+        include Sappho::Socket::LogUtilities
+
         def initialize client
           @clients = ClientRegister.instance
           @clients.register client
@@ -23,7 +25,7 @@ module Sappho
           @client = Sappho::Socket::SafeSocket.new 20
           @client.attach client
           @status = HeatmiserStatus.instance
-          @log = TraceLog.instance
+          @log = Sappho::Socket::AutoFlushLog.instance
         end
 
         def communicate
@@ -43,7 +45,7 @@ module Sappho
                 active = false
               else
                 command = command.unpack('c*')
-                @log.debug "header: #{TraceLog.hex command}" if @log.debug?
+                @log.debug "header: #{hexString command}" if @log.debug?
                 raise ClientDataError, "invalid pin" unless (command[3] & 0xFF) == config.pinLo and (command[4] & 0xFF) == config.pinHi
                 packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0xFF00)
                 raise ClientDataError, "invalid packet size" if packetSize < 7 or packetSize > 128

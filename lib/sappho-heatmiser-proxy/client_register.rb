@@ -9,7 +9,7 @@ module Sappho
 
       require 'singleton'
       require 'thread'
-      require 'sappho-heatmiser-proxy/trace_log'
+      require 'sappho-socket/auto_flush_log'
       require 'sappho-heatmiser-proxy/system_configuration'
 
       class ClientRegister
@@ -17,6 +17,7 @@ module Sappho
         include Singleton
 
         def initialize
+          @log = Sappho::Socket::AutoFlushLog.instance
           @mutex = Mutex.new
           @clients = {}
         end
@@ -25,7 +26,7 @@ module Sappho
           @mutex.synchronize do
             ip = client.getpeername
             @clients[client] = ip = (4 ... 8).map{|pos|ip[pos]}.join('.')
-            TraceLog.instance.info "client #{ip} connected"
+            @log.info "client #{ip} connected"
             log
           end
         end
@@ -34,7 +35,7 @@ module Sappho
           @mutex.synchronize do
             ip = @clients[client]
             @clients.delete client
-            TraceLog.instance.info "client #{ip} disconnected"
+            @log.info "client #{ip} disconnected"
             log
           end
         end
@@ -50,7 +51,7 @@ module Sappho
         private
 
         def log
-          TraceLog.instance.info "clients: #{@clients.size > 0 ?
+          @log.info "clients: #{@clients.size > 0 ?
               (@clients.collect{|client, ip| ip}).join(', ') : 'none'}"
         end
 

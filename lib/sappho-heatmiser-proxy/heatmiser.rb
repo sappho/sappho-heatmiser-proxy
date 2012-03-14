@@ -9,17 +9,19 @@ module Sappho
 
       require 'sappho-heatmiser-proxy/heatmiser_crc'
       require 'sappho-heatmiser-proxy/heatmiser_status'
-      require 'sappho-heatmiser-proxy/trace_log'
+      require 'sappho-socket/auto_flush_log'
       require 'sappho-heatmiser-proxy/command_queue'
       require 'sappho-heatmiser-proxy/system_configuration'
       require 'sappho-socket/safe_socket'
 
       class Heatmiser
 
+        include Sappho::Socket::LogUtilities
+
         def monitor
           status = HeatmiserStatus.instance
           queue = CommandQueue.instance
-          log = TraceLog.instance
+          log = Sappho::Socket::AutoFlushLog.instance
           config = SystemConfiguration.instance
           desc = "heatmiser at #{config.heatmiserHostname}:#{config.heatmiserPort}"
           queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
@@ -55,16 +57,16 @@ module Sappho
                                                  timeNow.hour,
                                                  timeNow.min,
                                                  timeNow.sec]).appendCRC
-                      log.info "clock correction: #{TraceLog.hex command}"
+                      log.info "clock correction: #{hexString command}"
                     end
                   end
-                  log.debug "sending command: #{TraceLog.hex command}" if log.debug?
+                  log.debug "sending command: #{hexString command}" if log.debug?
                   reply = []
                   startTime = Time.now
                   socket.write command.pack('c*')
                   reply = socket.read(81).unpack('c*')
                   timestamp = Time.now
-                  log.debug "reply: #{TraceLog.hex reply}" if log.debug?
+                  log.debug "reply: #{hexString reply}" if log.debug?
                   crcHi = reply.pop & 0xFF
                   crcLo = reply.pop & 0xFF
                   crc = HeatmiserCRC.new reply
