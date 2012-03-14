@@ -13,7 +13,6 @@ module Sappho
       require 'sappho-socket/safe_server'
       require 'sappho-heatmiser-proxy/version'
       require 'thread'
-      require 'socket'
 
       class CommandLine
 
