@@ -9,8 +9,8 @@ module Sappho
 
       require 'sappho-heatmiser-proxy/heatmiser'
       require 'sappho-heatmiser-proxy/heatmiser_client'
-      require 'sappho-heatmiser-proxy/client_register'
       require 'sappho-socket/auto_flush_log'
+      require 'sappho-socket/safe_server'
       require 'sappho-heatmiser-proxy/version'
       require 'thread'
       require 'socket'
@@ -19,24 +19,9 @@ module Sappho
 
         def CommandLine.process
           Sappho::Socket::AutoFlushLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
-          Thread.new do
-            clients = ClientRegister.instance
-            port = SystemConfiguration.instance.heatmiserPort
-            log = Sappho::Socket::AutoFlushLog.instance
-            log.info "opening proxy server port #{port}"
-            TCPServer.open port do | server |
-              log.info "proxy server port #{port} is now open"
-              loop do
-                if clients.maxAlreadyConnected?
-                  sleep 1
-                else
-                  log.info "listening for new clients on proxy server port #{port}"
-                  Thread.new server.accept do |client|
-                    HeatmiserClient.new(client).communicate
-                  end
-                end
-              end
-            end
+          port = SystemConfiguration.instance.heatmiserPort
+          Sappho::Socket::SafeServer.new('heatmiser proxy', port).serve do
+            | socket, ip | HeatmiserClient.new(socket, ip).communicate
           end
           Thread.new do
             Heatmiser.new.monitor

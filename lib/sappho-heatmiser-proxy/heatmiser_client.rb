@@ -10,7 +10,6 @@ module Sappho
       require 'sappho-socket/auto_flush_log'
       require 'sappho-heatmiser-proxy/heatmiser_status'
       require 'sappho-heatmiser-proxy/command_queue'
-      require 'sappho-heatmiser-proxy/client_register'
       require 'sappho-heatmiser-proxy/system_configuration'
       require 'sappho-socket/safe_socket'
 
@@ -18,12 +17,9 @@ module Sappho
 
         include Sappho::Socket::LogUtilities
 
-        def initialize client
-          @clients = ClientRegister.instance
-          @clients.register client
-          @ip = @clients.ip client
-          @client = Sappho::Socket::SafeSocket.new 20
-          @client.attach client
+        def initialize client, ip
+          @ip = ip
+          @client = client
           @status = HeatmiserStatus.instance
           @log = Sappho::Socket::AutoFlushLog.instance
         end
@@ -65,8 +61,6 @@ module Sappho
               active = false
             end
           end
-          @client.close
-          @clients.unregister @client
         end
 
         def read size
