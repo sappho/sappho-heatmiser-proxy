@@ -19,7 +19,8 @@ module Sappho
         def CommandLine.process
           Sappho::Socket::AutoFlushLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
           port = SystemConfiguration.instance.heatmiserPort
-          Sappho::Socket::SafeServer.new('heatmiser proxy', port).serve do
+          maxClients = SystemConfiguration.instance.maxClients
+          Sappho::Socket::SafeServer.new('heatmiser proxy', port, maxClients).serve do
             | socket, ip | HeatmiserClient.new(socket, ip).communicate
           end
           Thread.new do
