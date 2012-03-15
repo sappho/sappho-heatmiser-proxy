@@ -9,7 +9,7 @@ module Sappho
 
       require 'sappho-heatmiser-proxy/heatmiser'
       require 'sappho-heatmiser-proxy/heatmiser_client'
-      require 'sappho-socket/auto_flush_log'
+      require 'sappho-basics/auto_flush_log'
       require 'sappho-socket/safe_server'
       require 'sappho-heatmiser-proxy/version'
       require 'thread'
@@ -17,7 +17,7 @@ module Sappho
       class CommandLine
 
         def CommandLine.process
-          Sappho::Socket::AutoFlushLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
+          Sappho::AutoFlushLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
           port = SystemConfiguration.instance.heatmiserPort
           maxClients = SystemConfiguration.instance.maxClients
           Sappho::Socket::SafeServer.new('heatmiser proxy', port, maxClients).serve do

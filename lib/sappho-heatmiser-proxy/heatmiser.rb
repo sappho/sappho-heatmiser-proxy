@@ -9,19 +9,19 @@ module Sappho
 
       require 'sappho-heatmiser-proxy/heatmiser_crc'
       require 'sappho-heatmiser-proxy/heatmiser_status'
-      require 'sappho-socket/auto_flush_log'
+      require 'sappho-basics/auto_flush_log'
       require 'sappho-heatmiser-proxy/command_queue'
       require 'sappho-heatmiser-proxy/system_configuration'
       require 'sappho-socket/safe_socket'
 
       class Heatmiser
 
-        include Sappho::Socket::LogUtilities
+        include Sappho::LogUtilities
 
         def monitor
           status = HeatmiserStatus.instance
           queue = CommandQueue.instance
-          log = Sappho::Socket::AutoFlushLog.instance
+          log = Sappho::AutoFlushLog.instance
           config = SystemConfiguration.instance
           desc = "heatmiser at #{config.heatmiserHostname}:#{config.heatmiserPort}"
           queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC

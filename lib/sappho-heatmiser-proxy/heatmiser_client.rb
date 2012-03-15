@@ -7,20 +7,20 @@ module Sappho
   module Heatmiser
     module Proxy
 
-      require 'sappho-socket/auto_flush_log'
+      require 'sappho-basics/auto_flush_log'
       require 'sappho-heatmiser-proxy/heatmiser_status'
       require 'sappho-heatmiser-proxy/command_queue'
       require 'sappho-heatmiser-proxy/system_configuration'
 
       class HeatmiserClient
 
-        include Sappho::Socket::LogUtilities
+        include Sappho::LogUtilities
 
         def initialize client, ip
           @ip = ip
           @client = client
           @status = HeatmiserStatus.instance
-          @log = Sappho::Socket::AutoFlushLog.instance
+          @log = Sappho::AutoFlushLog.instance
         end
 
         def communicate

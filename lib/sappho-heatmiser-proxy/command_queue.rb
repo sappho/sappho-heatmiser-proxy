@@ -9,16 +9,16 @@ module Sappho
 
       require 'singleton'
       require 'thread'
-      require 'sappho-socket/auto_flush_log'
+      require 'sappho-basics/auto_flush_log'
 
       class CommandQueue
 
-        include Singleton, Sappho::Socket::LogUtilities
+        include Singleton, Sappho::LogUtilities
 
         def initialize
           @queue = []
           @mutex = Mutex.new
-          @log = Sappho::Socket::AutoFlushLog.instance
+          @log = Sappho::AutoFlushLog.instance
         end
 
         def push clientIP, command

@@ -9,11 +9,11 @@ module Sappho
 
       require 'singleton'
       require 'thread'
-      require 'sappho-socket/auto_flush_log'
+      require 'sappho-basics/auto_flush_log'
 
       class HeatmiserStatus
 
-        include Singleton, Sappho::Socket::LogUtilities
+        include Singleton, Sappho::LogUtilities
 
         attr_reader :valid, :timestamp, :sampleTime, :timeSinceLastValid, :sensedTemperature,
             :requestedTemperature, :heatOn, :keyLockOn, :frostProtectOn, :deviceTimeOffset,
@@ -59,7 +59,7 @@ module Sappho
 
         def initialize
           @mutex = Mutex.new
-          @log = Sappho::Socket::AutoFlushLog.instance
+          @log = Sappho::AutoFlushLog.instance
           @valid = false
           @raw = []
           @timestamp = Time.now
