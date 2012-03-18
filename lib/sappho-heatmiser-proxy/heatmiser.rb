@@ -28,7 +28,6 @@ module Sappho
           socket = Sappho::Socket::SafeSocket.new 5
           loop do
             begin
-              socket.settle 2
               command = queryCommand
               if queuedCommand = queue.get
                 command = queuedCommand
@@ -76,6 +75,7 @@ module Sappho
               status.invalidate
               log.error error
             end
+            socket.settle 2
           end
         end
 
