@@ -27,70 +27,55 @@ module Sappho
           queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           socket = Sappho::Socket::SafeSocket.new 5
           loop do
-            log.info "opening connection to #{desc}"
             begin
-              socket.open config.heatmiserHostname, config.heatmiserPort
-            rescue Timeout::Error
-              log.info "timeout while connecting to #{desc}"
-            rescue => error
-              log.error error
-            end
-            if socket.open?
-              log.info "connected to #{desc}"
-              active = true
-              while active do
-                begin
-                  socket.settle 5
-                  command = queryCommand
-                  if queuedCommand = queue.get
-                    command = queuedCommand
-                  else
-                    if status.get{status.valid ? status.deviceTimeOffset : 0.0}.abs > 150
-                      timeNow = Time.now
-                      dayOfWeek = timeNow.wday
-                      dayOfWeek = 7 if dayOfWeek == 0
-                      command = HeatmiserCRC.new([0xA3, 0x12, 0x00, config.pinLo, config.pinHi, 0x01, 0x2B, 0x00, 0x07,
-                                                 timeNow.year - 2000,
-                                                 timeNow.month,
-                                                 timeNow.day,
-                                                 dayOfWeek,
-                                                 timeNow.hour,
-                                                 timeNow.min,
-                                                 timeNow.sec]).appendCRC
-                      log.info "clock correction: #{hexString command}"
-                    end
-                  end
-                  log.debug "sending command: #{hexString command}" if log.debug?
-                  reply = []
-                  startTime = Time.now
-                  socket.write command.pack('c*')
-                  reply = socket.read(81).unpack('c*')
-                  timestamp = Time.now
-                  log.debug "reply: #{hexString reply}" if log.debug?
-                  crcHi = reply.pop & 0xFF
-                  crcLo = reply.pop & 0xFF
-                  crc = HeatmiserCRC.new reply
-                  if (reply[0] & 0xFF) == 0x94 and reply[1] == 0x51 and reply[2] == 0 and
-                      crc.crcHi == crcHi and crc.crcLo == crcLo
-                    reply << crcLo << crcHi
-                    status.set reply, timestamp, (timestamp - startTime) do
-                      queue.completed if queuedCommand
-                    end
-                  end
-                rescue Timeout::Error
-                  log.info "#{desc} is not responding - assuming connection down"
-                  active = false
-                rescue => error
-                  log.error error
-                  active = false
+              socket.settle 2
+              command = queryCommand
+              if queuedCommand = queue.get
+                command = queuedCommand
+              else
+                if status.get{status.valid ? status.deviceTimeOffset : 0.0}.abs > 150
+                  timeNow = Time.now
+                  dayOfWeek = timeNow.wday
+                  dayOfWeek = 7 if dayOfWeek == 0
+                  command = HeatmiserCRC.new([0xA3, 0x12, 0x00, config.pinLo, config.pinHi, 0x01, 0x2B, 0x00, 0x07,
+                                             timeNow.year - 2000,
+                                             timeNow.month,
+                                             timeNow.day,
+                                             dayOfWeek,
+                                             timeNow.hour,
+                                             timeNow.min,
+                                             timeNow.sec]).appendCRC
+                  log.info "clock correction: #{hexString command}"
                 end
               end
-              status.invalidate
+              log.debug "sending command: #{hexString command}" if log.debug?
+              socket.close #  just in case it wasn't last time around
+              socket.open config.heatmiserHostname, config.heatmiserPort
+              socket.settle 0.1
+              startTime = Time.now
+              socket.write command.pack('c*')
+              reply = socket.read(81).unpack('c*')
+              timestamp = Time.now
+              socket.settle 0.1
               socket.close
-              log.info "closed connection to #{desc}"
+              log.debug "reply: #{hexString reply}" if log.debug?
+              crcHi = reply.pop & 0xFF
+              crcLo = reply.pop & 0xFF
+              crc = HeatmiserCRC.new reply
+              if (reply[0] & 0xFF) == 0x94 and reply[1] == 0x51 and reply[2] == 0 and
+                  crc.crcHi == crcHi and crc.crcLo == crcLo
+                reply << crcLo << crcHi
+                status.set reply, timestamp, (timestamp - startTime) do
+                  queue.completed if queuedCommand
+                end
+              end
+            rescue Timeout::Error
+              status.invalidate
+              log.info "#{desc} is not responding - assuming connection down"
+            rescue => error
+              status.invalidate
+              log.error error
             end
-            log.info "waiting 5 seconds before attempting to re-connect to #{desc}"
-            socket.settle 5
           end
         end
 
