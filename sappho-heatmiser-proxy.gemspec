@@ -24,5 +24,6 @@ Gem::Specification.new do |s|
   # s.add_development_dependency "rspec"
   # s.add_runtime_dependency "rest-client"
   s.add_development_dependency 'rake', '>= 0.9.2.2'
-  s.add_dependency 'sappho-socket', '>= 0.0.1'
+  s.add_dependency 'sappho-socket', '>= 0.1.0'
+  s.add_dependency 'sappho-basics', '>= 0.1.0'
 end

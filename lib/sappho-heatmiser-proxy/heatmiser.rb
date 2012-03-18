@@ -21,7 +21,7 @@ module Sappho
         def monitor
           status = HeatmiserStatus.instance
           queue = CommandQueue.instance
-          log = Sappho::AutoFlushLog.instance
+          log = Sappho::ApplicationAutoFlushLog.instance
           config = SystemConfiguration.instance
           desc = "heatmiser at #{config.heatmiserHostname}:#{config.heatmiserPort}"
           queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC

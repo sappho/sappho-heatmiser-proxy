@@ -20,7 +20,7 @@ module Sappho
           @ip = ip
           @client = client
           @status = HeatmiserStatus.instance
-          @log = Sappho::AutoFlushLog.instance
+          @log = Sappho::ApplicationAutoFlushLog.instance
         end
 
         def communicate

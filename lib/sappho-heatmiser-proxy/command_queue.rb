@@ -18,7 +18,7 @@ module Sappho
         def initialize
           @queue = []
           @mutex = Mutex.new
-          @log = Sappho::AutoFlushLog.instance
+          @log = Sappho::ApplicationAutoFlushLog.instance
         end
 
         def push clientIP, command

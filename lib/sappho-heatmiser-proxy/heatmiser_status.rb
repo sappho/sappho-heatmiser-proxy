@@ -59,7 +59,7 @@ module Sappho
 
         def initialize
           @mutex = Mutex.new
-          @log = Sappho::AutoFlushLog.instance
+          @log = Sappho::ApplicationAutoFlushLog.instance
           @valid = false
           @raw = []
           @timestamp = Time.now
