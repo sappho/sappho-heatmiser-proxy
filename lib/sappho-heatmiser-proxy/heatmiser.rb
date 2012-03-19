@@ -50,15 +50,12 @@ module Sappho
                 end
               end
               log.debug "sending command: #{hexString command}" if log.debug?
-              socket.close #  just in case it wasn't last time around
               socket.open config.heatmiserHostname, config.heatmiserPort
               socket.settle 0.1
               startTime = Time.now
               socket.write command.pack('c*')
               reply = socket.read(81).unpack('c*')
               timestamp = Time.now
-              socket.settle 0.1
-              socket.close
               log.debug "reply: #{hexString reply}" if log.debug?
               crcHi = reply.pop & 0xFF
               crcLo = reply.pop & 0xFF
@@ -83,6 +80,8 @@ module Sappho
               status.invalidate
               log.error error
             end
+            socket.settle 0.1
+            socket.close
             socket.settle 2
           end
         end
