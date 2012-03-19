@@ -9,6 +9,7 @@ module Sappho
 
       require 'singleton'
       require 'yaml'
+      require 'sappho-basics/auto_flush_log'
 
       class SystemConfiguration
 
@@ -16,23 +17,28 @@ module Sappho
 
         attr_reader :heatmiserId, :heatmiserHostname, :heatmiserPort, :heatmiserHardware,
                     :pinLo, :pinHi, :maxClients,
-                    :mongodbHostname, :mongodbPort, :mongodbDatabase,
+                    :mongoLogging, :mongodbHostname, :mongodbPort, :mongodbDatabase,
                     :detailedLogging
 
         def initialize
-          data = YAML.load_file(File.expand_path(ARGV[0] || 'heatmiser-proxy.yml'))
+          log = Sappho::ApplicationAutoFlushLog.instance
+          filename = File.expand_path(ARGV[0] || 'heatmiser-proxy.yml')
+          log.info "loading application configuration from #{filename}"
+          data = YAML.load_file(filename)
           @heatmiserId = data['heatmiser.id']
           @heatmiserHostname = data['heatmiser.address']
-          @heatmiserPort = Integer data['heatmiser.port']
-          @heatmiserHardware = data.has_key? 'heatmiser.is.hardware'
+          @heatmiserPort = data.has_key?('heatmiser.port') ? Integer(data['heatmiser.port']) : 8068
+          @heatmiserHardware = data.has_key? 'heatmiser.hardware'
           pin = Integer data['heatmiser.pin']
           @pinLo = pin & 0xFF
           @pinHi = (pin >> 8) & 0xFF
-          @maxClients = Integer data['clients.max']
+          @maxClients = data.has_key?('clients.max') ? Integer(data['clients.max']) : 10
+          @mongoLogging = data.has_key?('mongodb.address') and data.has_key?('mongodb.database')
           @mongodbHostname = data['mongodb.address']
           @mongodbPort = data.has_key?('mongodb.port') ? Integer(data['mongodb.port']) : 27017
           @mongodbDatabase = data['mongodb.database']
           @detailedLogging = data.has_key? 'logging.detailed'
+          raise "missing settings in #{filename}" unless @heatmiserId and @heatmiserHostname
         end
 
       end

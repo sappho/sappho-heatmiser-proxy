@@ -22,9 +22,13 @@ module Sappho
           log = Sappho::ApplicationAutoFlushLog.instance
           log.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
           config = SystemConfiguration.instance
-          log.info "connecting to mongodb database #{config.mongodbDatabase} on #{config.mongodbHostname}:#{config.mongodbPort}"
-          MongoMapper.connection = Mongo::Connection.new config.mongodbHostname, config.mongodbPort
-          MongoMapper.database = config.mongodbDatabase
+          if config.mongoLogging
+            log.info "connecting to mongodb database #{config.mongodbDatabase} on #{config.mongodbHostname}:#{config.mongodbPort}"
+            MongoMapper.connection = Mongo::Connection.new config.mongodbHostname, config.mongodbPort
+            MongoMapper.database = config.mongodbDatabase
+          else
+            log.info 'logging to mongodb is disabled'
+          end
           Sappho::Socket::SafeServer.new('heatmiser proxy', config.heatmiserPort, config.maxClients, config.detailedLogging).serve do
             | socket, ip | HeatmiserClient.new(socket, ip).communicate
           end

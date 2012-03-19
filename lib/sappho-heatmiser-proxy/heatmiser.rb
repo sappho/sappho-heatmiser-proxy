@@ -72,7 +72,7 @@ module Sappho
                   :requestedTemperature => status.requestedTemperature,
                   :heatOn => status.heatOn,
                   :frostProtectOn => status.frostProtectOn,
-                  :deviceTimeOffset => status.deviceTimeOffset}}).save
+                  :deviceTimeOffset => status.deviceTimeOffset}}).save if config.mongoLogging
               else
                 log.info "#{desc} responded with invalid bytes - ignoring it this time"
               end
