@@ -16,7 +16,8 @@ module Sappho
 
         attr_reader :heatmiserId, :heatmiserHostname, :heatmiserPort, :heatmiserHardware,
                     :pinLo, :pinHi, :maxClients,
-                    :mongodbHostname, :mongodbPort, :mongodbDatabase
+                    :mongodbHostname, :mongodbPort, :mongodbDatabase,
+                    :detailedLogging
 
         def initialize
           data = YAML.load_file(File.expand_path(ARGV[0] || 'heatmiser-proxy.yml'))
@@ -31,6 +32,7 @@ module Sappho
           @mongodbHostname = data['mongodb.address']
           @mongodbPort = data.has_key?('mongodb.port') ? Integer(data['mongodb.port']) : 27017
           @mongodbDatabase = data['mongodb.database']
+          @detailedLogging = data.has_key? 'logging.detailed'
         end
 
       end

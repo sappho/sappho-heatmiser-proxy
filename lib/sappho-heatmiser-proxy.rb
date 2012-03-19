@@ -25,7 +25,7 @@ module Sappho
           log.info "connecting to mongodb database #{config.mongodbDatabase} on #{config.mongodbHostname}:#{config.mongodbPort}"
           MongoMapper.connection = Mongo::Connection.new config.mongodbHostname, config.mongodbPort
           MongoMapper.database = config.mongodbDatabase
-          Sappho::Socket::SafeServer.new('heatmiser proxy', config.heatmiserPort, config.maxClients).serve do
+          Sappho::Socket::SafeServer.new('heatmiser proxy', config.heatmiserPort, config.maxClients, config.detailedLogging).serve do
             | socket, ip | HeatmiserClient.new(socket, ip).communicate
           end
           Thread.new do
