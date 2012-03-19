@@ -72,10 +72,12 @@ module Sappho
                                                            :heatOn => status.heatOn,
                                                            :frostProtectOn => status.frostProtectOn,
                                                            :deviceTimeOffset => status.deviceTimeOffset).save
+              else
+                log.info "#{desc} responded with invalid bytes - ignoring it this time"
               end
             rescue Timeout::Error
               status.invalidate
-              log.info "#{desc} is not responding - assuming connection down"
+              log.info "#{desc} is not responding - the connection might be down"
             rescue => error
               status.invalidate
               log.error error
