@@ -65,13 +65,14 @@ module Sappho
                 reply << crcLo << crcHi
                 status.set reply, timestamp, (timestamp - startTime)
                 queue.completed if queuedCommand
-                Sappho::Heatmiser::Model::HeatmiserLog.new(:deviceId => config.heatmiserId,
-                                                           :timestamp => timestamp,
-                                                           :sensedTemperature => status.sensedTemperature,
-                                                           :requestedTemperature => status.requestedTemperature,
-                                                           :heatOn => status.heatOn,
-                                                           :frostProtectOn => status.frostProtectOn,
-                                                           :deviceTimeOffset => status.deviceTimeOffset).save
+                Sappho::Heatmiser::Model::HeatmiserLog.new(status.get{{
+                  :deviceId => config.heatmiserId,
+                  :timestamp => timestamp,
+                  :sensedTemperature => status.sensedTemperature,
+                  :requestedTemperature => status.requestedTemperature,
+                  :heatOn => status.heatOn,
+                  :frostProtectOn => status.frostProtectOn,
+                  :deviceTimeOffset => status.deviceTimeOffset}}).save
               else
                 log.info "#{desc} responded with invalid bytes - ignoring it this time"
               end
