@@ -34,7 +34,7 @@ module Sappho
               if queuedCommand = queue.get
                 command = queuedCommand
               else
-                if status.get{status.valid ? status.deviceTimeOffset : 0.0}.abs > 150
+                if status.get{status.valid ? status.deviceTimeOffset : 0.0}.abs > 5 and config.heatmiserHardware
                   timeNow = Time.now
                   dayOfWeek = timeNow.wday
                   dayOfWeek = 7 if dayOfWeek == 0

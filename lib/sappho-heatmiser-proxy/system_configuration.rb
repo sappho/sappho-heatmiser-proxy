@@ -14,7 +14,7 @@ module Sappho
 
         include Singleton
 
-        attr_reader :heatmiserId, :heatmiserHostname, :heatmiserPort,
+        attr_reader :heatmiserId, :heatmiserHostname, :heatmiserPort, :heatmiserHardware,
                     :pinLo, :pinHi, :maxClients,
                     :mongodbHostname, :mongodbPort, :mongodbDatabase
 
@@ -23,6 +23,7 @@ module Sappho
           @heatmiserId = data['heatmiser.id']
           @heatmiserHostname = data['heatmiser.address']
           @heatmiserPort = Integer data['heatmiser.port']
+          @heatmiserHardware = data.has_key? 'heatmiser.is.hardware'
           pin = Integer data['heatmiser.pin']
           @pinLo = pin & 0xFF
           @pinHi = (pin >> 8) & 0xFF
