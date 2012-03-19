@@ -32,4 +32,7 @@ Gem::Specification.new do |s|
   # s.add_runtime_dependency "rest-client"
   s.add_development_dependency 'rake', '>= 0.9.2.2'
   s.add_dependency 'sappho-socket', '>= 0.1.1'
+  s.add_dependency 'mongo_mapper', '>= 0.11.0'
+  s.add_dependency 'mongo', '>= 1.6.1'
+  s.add_dependency 'bson_ext', '>= 1.6.1'
 end

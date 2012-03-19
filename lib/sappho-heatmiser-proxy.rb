@@ -12,15 +12,20 @@ module Sappho
       require 'sappho-basics/auto_flush_log'
       require 'sappho-socket/safe_server'
       require 'sappho-heatmiser-proxy/version'
+      require 'mongo_mapper'
+      require 'mongo/connection'
       require 'thread'
 
       class CommandLine
 
         def CommandLine.process
-          Sappho::ApplicationAutoFlushLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
-          port = SystemConfiguration.instance.heatmiserPort
-          maxClients = SystemConfiguration.instance.maxClients
-          Sappho::Socket::SafeServer.new('heatmiser proxy', port, maxClients).serve do
+          log = Sappho::ApplicationAutoFlushLog.instance
+          log.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
+          config = SystemConfiguration.instance
+          log.info "connecting to mongodb database #{config.mongodbDatabase} on #{config.mongodbHostname}:#{config.mongodbPort}"
+          MongoMapper.connection = Mongo::Connection.new config.mongodbHostname, config.mongodbPort
+          MongoMapper.database = config.mongodbDatabase
+          Sappho::Socket::SafeServer.new('heatmiser proxy', config.heatmiserPort, config.maxClients).serve do
             | socket, ip | HeatmiserClient.new(socket, ip).communicate
           end
           Thread.new do

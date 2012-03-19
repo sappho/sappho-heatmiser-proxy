@@ -12,6 +12,7 @@ module Sappho
       require 'sappho-basics/auto_flush_log'
       require 'sappho-heatmiser-proxy/command_queue'
       require 'sappho-heatmiser-proxy/system_configuration'
+      require 'sappho-heatmiser-proxy/model/heatmiser_log'
       require 'sappho-socket/safe_socket'
 
       class Heatmiser
@@ -23,7 +24,8 @@ module Sappho
           queue = CommandQueue.instance
           log = Sappho::ApplicationAutoFlushLog.instance
           config = SystemConfiguration.instance
-          desc = "heatmiser at #{config.heatmiserHostname}:#{config.heatmiserPort}"
+          desc = "heatmiser #{config.heatmiserId} at #{config.heatmiserHostname}:#{config.heatmiserPort}"
+          log.info "connecting to #{desc}"
           queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           socket = Sappho::Socket::SafeSocket.new 5
           loop do
@@ -64,9 +66,15 @@ module Sappho
               if (reply[0] & 0xFF) == 0x94 and reply[1] == 0x51 and reply[2] == 0 and
                   crc.crcHi == crcHi and crc.crcLo == crcLo
                 reply << crcLo << crcHi
-                status.set reply, timestamp, (timestamp - startTime) do
-                  queue.completed if queuedCommand
-                end
+                status.set reply, timestamp, (timestamp - startTime)
+                queue.completed if queuedCommand
+                Sappho::Heatmiser::Model::HeatmiserLog.new(:deviceId => config.heatmiserId,
+                                                           :timestamp => timestamp,
+                                                           :sensedTemperature => status.sensedTemperature,
+                                                           :requestedTemperature => status.requestedTemperature,
+                                                           :heatOn => status.heatOn,
+                                                           :frostProtectOn => status.frostProtectOn,
+                                                           :deviceTimeOffset => status.deviceTimeOffset).save
               end
             rescue Timeout::Error
               status.invalidate
