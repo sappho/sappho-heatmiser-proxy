@@ -30,11 +30,7 @@ module Sappho
             begin
               command = read 5
               if command == 'check'
-                reply = @status.get {
-                  @status.timeSinceLastValid > 60 ?
-                      'error: no response from heatmiser unit in last minute' :
-                      @status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid'
-                }
+                reply = @status.get { @status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid' }
                 @log.info "client #{@ip} checking status - reply: #{reply}"
                 @client.write "#{reply}\r\n"
                 active = false
