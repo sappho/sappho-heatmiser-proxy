@@ -26,9 +26,10 @@ module Sappho
           desc = "heatmiser at #{config.heatmiserHostname}:#{config.heatmiserPort}"
           queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           socket = Sappho::Socket::SafeSocket.new 5
+          timestamp = Time.now - config.sampleDelay
           loop do
             begin
-              command = queryCommand
+              command = nil
               if queuedCommand = queue.get
                 command = queuedCommand
               else
@@ -47,25 +48,30 @@ module Sappho
                   log.info "clock correction: #{hexString command}"
                 end
               end
-              log.debug "sending command: #{hexString command}" if log.debug?
-              socket.close #  just in case it wasn't last time around
-              socket.open config.heatmiserHostname, config.heatmiserPort
-              socket.settle 0.1
-              startTime = Time.now
-              socket.write command.pack('c*')
-              reply = socket.read(81).unpack('c*')
-              timestamp = Time.now
-              socket.settle 0.1
-              socket.close
-              log.debug "reply: #{hexString reply}" if log.debug?
-              crcHi = reply.pop & 0xFF
-              crcLo = reply.pop & 0xFF
-              crc = HeatmiserCRC.new reply
-              if (reply[0] & 0xFF) == 0x94 and reply[1] == 0x51 and reply[2] == 0 and
-                  crc.crcHi == crcHi and crc.crcLo == crcLo
-                reply << crcLo << crcHi
-                status.set reply, timestamp, (timestamp - startTime) do
-                  queue.completed if queuedCommand
+              unless command
+                command = queryCommand if (Time.now - timestamp) >= config.sampleDelay
+              end
+              if command
+                log.debug "sending command: #{hexString command}" if log.debug?
+                socket.close #  just in case it wasn't last time around
+                socket.open config.heatmiserHostname, config.heatmiserPort
+                socket.settle 0.1
+                startTime = Time.now
+                socket.write command.pack('c*')
+                reply = socket.read(81).unpack('c*')
+                timestamp = Time.now
+                socket.settle 0.1
+                socket.close
+                log.debug "reply: #{hexString reply}" if log.debug?
+                crcHi = reply.pop & 0xFF
+                crcLo = reply.pop & 0xFF
+                crc = HeatmiserCRC.new reply
+                if (reply[0] & 0xFF) == 0x94 and reply[1] == 0x51 and reply[2] == 0 and
+                    crc.crcHi == crcHi and crc.crcLo == crcLo
+                  reply << crcLo << crcHi
+                  status.set reply, timestamp, (timestamp - startTime) do
+                    queue.completed if queuedCommand
+                  end
                 end
               end
             rescue Timeout::Error

@@ -14,7 +14,7 @@ module Sappho
 
         include Singleton
 
-        attr_reader :heatmiserHostname, :heatmiserPort, :pinLo, :pinHi, :maxClients
+        attr_reader :heatmiserHostname, :heatmiserPort, :pinLo, :pinHi, :sampleDelay, :maxClients
 
         def initialize
           data = YAML.load_file(File.expand_path(ARGV[0] || 'heatmiser-proxy.yml'))
@@ -23,6 +23,7 @@ module Sappho
           pin = Integer data['heatmiser.pin']
           @pinLo = pin & 0xFF
           @pinHi = (pin >> 8) & 0xFF
+          @sampleDelay = Integer data['heatmiser.sample.delay']
           @maxClients = Integer data['clients.max']
         end
 
