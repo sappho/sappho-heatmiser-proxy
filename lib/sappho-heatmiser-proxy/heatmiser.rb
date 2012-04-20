@@ -49,7 +49,7 @@ module Sappho
                 end
               end
               unless command
-                command = queryCommand if (Time.now - timestamp) >= config.sampleDelay
+                command = queryCommand if (Time.now - timestamp) >= config.sampleDelay or yield
               end
               if command
                 log.debug "sending command: #{hexString command}" if log.debug?
@@ -81,7 +81,7 @@ module Sappho
               status.invalidate
               log.error error
             end
-            socket.settle 2
+            socket.settle 1
           end
         end
 
