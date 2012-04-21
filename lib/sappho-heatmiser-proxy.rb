@@ -20,12 +20,14 @@ module Sappho
           Sappho::ApplicationAutoFlushLog.instance.info "#{NAME} version #{VERSION} - #{HOMEPAGE}"
           port = SystemConfiguration.instance.heatmiserPort
           maxClients = SystemConfiguration.instance.maxClients
-          server = Sappho::Socket::SafeServer.new('heatmiser proxy', port, maxClients, 15, true)
+          server = Sappho::Socket::SafeServer.new('heatmiser proxy', port, maxClients, 10, true)
           server.serve do
             | socket, ip | HeatmiserClient.new(socket, ip).communicate
           end
           Thread.new do
-            Heatmiser.new.monitor { server.clientCount > 0 }
+            Heatmiser.new.monitor do
+              server.clientCount > 0
+            end
           end.join
         end
 

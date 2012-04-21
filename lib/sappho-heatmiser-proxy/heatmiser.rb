@@ -48,20 +48,21 @@ module Sappho
                   log.info "clock correction: #{hexString command}"
                 end
               end
-              refreshRequested = queue.refreshRequested or yield
+              refreshRequested = queue.refreshRequested?
+              clientsActive = yield
               unless command
-                command = queryCommand if refreshRequested or (Time.now - timestamp) >= config.sampleDelay
+                command = queryCommand if refreshRequested or clientsActive or (Time.now - timestamp) >= config.sampleDelay
               end
               if command
                 log.debug "sending command: #{hexString command}" if log.debug?
                 socket.close #  just in case it wasn't last time around
                 socket.open config.heatmiserHostname, config.heatmiserPort
-                socket.settle 0.1
+                socket.settle 0.01
                 startTime = Time.now
                 socket.write command.pack('c*')
                 reply = socket.read(81).unpack('c*')
                 timestamp = Time.now
-                socket.settle 0.1
+                socket.settle 0.01
                 socket.close
                 log.debug "reply: #{hexString reply}" if log.debug?
                 crcHi = reply.pop & 0xFF
