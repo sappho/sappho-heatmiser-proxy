@@ -19,40 +19,42 @@ module Sappho
         def initialize client, ip
           @ip = ip
           @client = client
-          @status = HeatmiserStatus.instance
-          @log = Sappho::ApplicationAutoFlushLog.instance
         end
 
         def communicate
+          queue = CommandQueue.instance
+          queue.refreshStatus @ip
+          status = HeatmiserStatus.instance
           config = SystemConfiguration.instance
+          log = Sappho::ApplicationAutoFlushLog.instance
           active = true
           while active do
             begin
               command = read 5
               if command == 'check'
-                reply = @status.get { @status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid' }
-                @log.info "client #{@ip} checking status - reply: #{reply}"
+                reply = status.get { status.valid ? 'ok' : 'error: last response from heatmiser unit was invalid' }
+                log.info "client #{@ip} checking status - reply: #{reply}"
                 @client.write "#{reply}\r\n"
                 active = false
               else
                 command = command.unpack('c*')
-                @log.debug "header: #{hexString command}" if @log.debug?
+                log.debug "header: #{hexString command}" if log.debug?
                 raise ClientDataError, "invalid pin" unless (command[3] & 0xFF) == config.pinLo and (command[4] & 0xFF) == config.pinHi
                 packetSize = (command[1] & 0xFF) | ((command[2] << 8) & 0xFF00)
                 raise ClientDataError, "invalid packet size" if packetSize < 7 or packetSize > 128
                 command += read(packetSize - 5).unpack('c*')
-                CommandQueue.instance.push @ip, command unless (command[0] & 0xFF) == 0x93
-                @status.get { @client.write @status.raw.pack('c*') if @status.valid }
-                @log.info "command received from client #{@ip} so it is alive"
+                queue.push @ip, command unless (command[0] & 0xFF) == 0x93
+                status.get { @client.write status.raw.pack('c*') if status.valid }
+                log.info "command received from client #{@ip} so it is alive"
               end
             rescue Timeout::Error
-              @log.info "timeout on client #{@ip} so presuming it dormant"
+              log.info "timeout on client #{@ip} so presuming it dormant"
               active = false
             rescue ClientDataError => error
-              @log.info "data error from client #{@ip}: #{error.message}"
+              log.info "data error from client #{@ip}: #{error.message}"
               active = false
             rescue => error
-              @log.error error
+              log.error error
               active = false
             end
           end
