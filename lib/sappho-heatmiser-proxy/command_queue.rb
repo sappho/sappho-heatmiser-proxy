@@ -29,11 +29,11 @@ module Sappho
           end
         end
 
-        def refreshStatus
+        def refreshRequested
           @mutex.synchronize do
-            required = @refreshStatus
+            requested = @refreshStatus
             @refreshStatus = false
-            required
+            requested
           end
         end
 

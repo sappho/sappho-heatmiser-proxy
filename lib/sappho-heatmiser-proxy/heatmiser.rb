@@ -48,7 +48,7 @@ module Sappho
                   log.info "clock correction: #{hexString command}"
                 end
               end
-              refreshRequested = queue.refreshStatus or yield
+              refreshRequested = queue.refreshRequested or yield
               unless command
                 command = queryCommand if refreshRequested or (Time.now - timestamp) >= config.sampleDelay
               end
