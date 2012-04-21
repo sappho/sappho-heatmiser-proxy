@@ -7,7 +7,7 @@ module Sappho
   module Heatmiser
     module Proxy
       NAME = 'sappho-heatmiser-proxy'
-      VERSION = '0.1.8'
+      VERSION = '0.1.9'
       AUTHORS = ['Andrew Heald']
       EMAILS = ['andrew@heald.co.uk']
       HOMEPAGE = 'https://github.com/sappho/sappho-heatmiser-proxy/wiki'
