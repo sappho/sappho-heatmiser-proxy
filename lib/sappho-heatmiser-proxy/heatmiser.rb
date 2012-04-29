@@ -26,6 +26,7 @@ module Sappho
           desc = "heatmiser at #{config.heatmiserHostname}:#{config.heatmiserPort}"
           queryCommand = HeatmiserCRC.new([0x93, 0x0B, 0x00, config.pinLo, config.pinHi, 0x00, 0x00, 0xFF, 0xFF]).appendCRC
           socket = Sappho::Socket::SafeSocket.new 5
+          openPort = true
           timestamp = Time.now - config.sampleDelay
           loop do
             begin
@@ -48,22 +49,21 @@ module Sappho
                   log.info "clock correction: #{hexString command}"
                 end
               end
-              refreshRequested = queue.refreshRequested?
-              clientsActive = yield
               unless command
-                command = queryCommand if refreshRequested or clientsActive or (Time.now - timestamp) >= config.sampleDelay
+                command = queryCommand if yield or (Time.now - timestamp) >= config.sampleDelay
               end
               if command
                 log.debug "sending command: #{hexString command}" if log.debug?
-                socket.close #  just in case it wasn't last time around
-                socket.open config.heatmiserHostname, config.heatmiserPort
-                socket.settle 0.01
+                if openPort
+                  openPort = false
+                  socket.close
+                  socket.open config.heatmiserHostname, config.heatmiserPort
+                  socket.settle 1
+                end
                 startTime = Time.now
                 socket.write command.pack('c*')
                 reply = socket.read(81).unpack('c*')
                 timestamp = Time.now
-                socket.settle 0.01
-                socket.close
                 log.debug "reply: #{hexString reply}" if log.debug?
                 crcHi = reply.pop & 0xFF
                 crcLo = reply.pop & 0xFF
@@ -77,9 +77,11 @@ module Sappho
                 end
               end
             rescue Timeout::Error
+              openPort = true
               status.invalidate
               log.info "#{desc} is not responding - assuming connection down"
             rescue => error
+              openPort = true
               status.invalidate
               log.error error
             end

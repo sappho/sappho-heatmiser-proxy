@@ -23,7 +23,6 @@ module Sappho
 
         def communicate
           queue = CommandQueue.instance
-          queue.refreshStatus @ip
           status = HeatmiserStatus.instance
           config = SystemConfiguration.instance
           log = Sappho::ApplicationAutoFlushLog.instance

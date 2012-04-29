@@ -16,25 +16,9 @@ module Sappho
         include Singleton, Sappho::LogUtilities
 
         def initialize
-          @refreshRequested = false
           @queue = []
           @mutex = Mutex.new
           @log = Sappho::ApplicationAutoFlushLog.instance
-        end
-
-        def refreshStatus clientIP
-          @log.info "client #{clientIP} requests status refresh"
-          @mutex.synchronize do
-            @refreshRequested = true
-          end
-        end
-
-        def refreshRequested?
-          @mutex.synchronize do
-            requested = @refreshRequested
-            @refreshRequested = false
-            requested
-          end
         end
 
         def push clientIP, command
